@@ -18,6 +18,15 @@ RegistrationCloudT::Ptr voxelDownsampleFiniteCloud(
     const RegistrationCloudT::ConstPtr& cloud,
     double leaf_size);
 
+struct VoxelPyramidLevel {
+  double leaf_size = 0.0;
+  RegistrationCloudT::Ptr cloud;
+};
+
+std::vector<VoxelPyramidLevel> buildVoxelPyramid(
+    const RegistrationCloudT::ConstPtr& cloud,
+    const std::vector<double>& leaf_sizes);
+
 struct MultiScaleIcpConfig {
   std::vector<double> voxel_leaf_sizes;
   double max_correspondence_distance = 1.0;

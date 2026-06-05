@@ -92,6 +92,51 @@ TEST(LocalRegistration, VoxelDownsampleHandlesLargeCoordinateSpan) {
   EXPECT_LT(filtered->size(), cloud->size());
 }
 
+TEST(LocalRegistration, BuildVoxelPyramidFiltersFinitePointsAndDeduplicatesLeafSizes) {
+  CloudT::Ptr cloud(new CloudT);
+  for (int i = 0; i < 40; ++i) {
+    PointT point;
+    point.x = 1000.0f + 0.02f * static_cast<float>(i);
+    point.y = -500.0f;
+    point.z = 2.0f;
+    point.intensity = static_cast<float>(i);
+    cloud->push_back(point);
+  }
+  PointT nan_point;
+  nan_point.x = std::numeric_limits<float>::quiet_NaN();
+  nan_point.y = 0.0f;
+  nan_point.z = 0.0f;
+  nan_point.intensity = 1.0f;
+  cloud->push_back(nan_point);
+  cloud->width = cloud->size();
+  cloud->height = 1;
+  cloud->is_dense = false;
+
+  const std::vector<lio_local_odometry::VoxelPyramidLevel> levels =
+      lio_local_odometry::buildVoxelPyramid(cloud, {0.10, 0.10, 0.0});
+
+  ASSERT_EQ(2u, levels.size());
+  EXPECT_DOUBLE_EQ(0.10, levels[0].leaf_size);
+  EXPECT_DOUBLE_EQ(0.0, levels[1].leaf_size);
+  ASSERT_TRUE(levels[0].cloud);
+  ASSERT_TRUE(levels[1].cloud);
+  EXPECT_LT(levels[0].cloud->size(), 40u);
+  EXPECT_EQ(40u, levels[1].cloud->size());
+  for (const auto& level : levels) {
+    for (const auto& point : level.cloud->points) {
+      EXPECT_TRUE(pcl::isFinite(point));
+    }
+  }
+}
+
+TEST(LocalRegistration, BuildVoxelPyramidRejectsInvalidLeafSizes) {
+  const CloudT::Ptr cloud = makeAsymmetricCloud();
+
+  EXPECT_TRUE(lio_local_odometry::buildVoxelPyramid(cloud, {}).empty());
+  EXPECT_TRUE(lio_local_odometry::buildVoxelPyramid(cloud, {-0.10}).empty());
+  EXPECT_TRUE(lio_local_odometry::buildVoxelPyramid(cloud, {std::numeric_limits<double>::quiet_NaN()}).empty());
+}
+
 TEST(LocalRegistration, MultiScaleIcpRecoversRigidTranslation) {
   const CloudT::Ptr target = makeAsymmetricCloud();
 

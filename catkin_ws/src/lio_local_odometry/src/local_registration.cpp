@@ -139,6 +139,35 @@ RegistrationCloudT::Ptr voxelDownsampleFiniteCloudFromOrigin(
   return filtered;
 }
 
+std::vector<double> uniqueLeafSizes(const std::vector<double>& leaf_sizes) {
+  std::vector<double> unique;
+  for (const double leaf_size : leaf_sizes) {
+    if (std::find(unique.begin(), unique.end(), leaf_size) == unique.end()) {
+      unique.push_back(leaf_size);
+    }
+  }
+  return unique;
+}
+
+std::vector<VoxelPyramidLevel> buildVoxelPyramidFromOrigin(
+    const RegistrationCloudT::ConstPtr& cloud,
+    const std::vector<double>& leaf_sizes,
+    const RegistrationPointT& origin) {
+  std::vector<VoxelPyramidLevel> levels;
+  if (!validLeafSizes(leaf_sizes)) {
+    return levels;
+  }
+  const std::vector<double> unique_leaf_sizes = uniqueLeafSizes(leaf_sizes);
+  levels.reserve(unique_leaf_sizes.size());
+  for (const double leaf_size : unique_leaf_sizes) {
+    VoxelPyramidLevel level;
+    level.leaf_size = leaf_size;
+    level.cloud = voxelDownsampleFiniteCloudFromOrigin(cloud, leaf_size, origin);
+    levels.push_back(level);
+  }
+  return levels;
+}
+
 }  // namespace
 
 RegistrationCloudT::Ptr voxelDownsampleFiniteCloud(
@@ -146,6 +175,13 @@ RegistrationCloudT::Ptr voxelDownsampleFiniteCloud(
     double leaf_size) {
   return voxelDownsampleFiniteCloudFromOrigin(
       cloud, leaf_size, firstFinitePointOrZero(cloud, RegistrationCloudT::ConstPtr()));
+}
+
+std::vector<VoxelPyramidLevel> buildVoxelPyramid(
+    const RegistrationCloudT::ConstPtr& cloud,
+    const std::vector<double>& leaf_sizes) {
+  return buildVoxelPyramidFromOrigin(
+      cloud, leaf_sizes, firstFinitePointOrZero(cloud, RegistrationCloudT::ConstPtr()));
 }
 
 MultiScaleIcpRegistration::MultiScaleIcpRegistration(
@@ -180,11 +216,14 @@ MultiScaleIcpResult MultiScaleIcpRegistration::align(
   Eigen::Matrix4f stage_initial_guess = initial_guess;
   const RegistrationPointT voxel_origin =
       firstFinitePointOrZero(target, source);
-  for (const double leaf_size : config_.voxel_leaf_sizes) {
-    const RegistrationCloudT::Ptr stage_source =
-        downsample(source, leaf_size, voxel_origin);
-    const RegistrationCloudT::Ptr stage_target =
-        downsample(target, leaf_size, voxel_origin);
+  const std::vector<VoxelPyramidLevel> source_pyramid =
+      buildVoxelPyramidFromOrigin(source, config_.voxel_leaf_sizes, voxel_origin);
+  const std::vector<VoxelPyramidLevel> target_pyramid =
+      buildVoxelPyramidFromOrigin(target, config_.voxel_leaf_sizes, voxel_origin);
+  const std::size_t stage_count = std::min(source_pyramid.size(), target_pyramid.size());
+  for (std::size_t stage = 0; stage < stage_count; ++stage) {
+    const RegistrationCloudT::Ptr stage_source = source_pyramid[stage].cloud;
+    const RegistrationCloudT::Ptr stage_target = target_pyramid[stage].cloud;
     if (stage_source->size() < config_.min_points ||
         stage_target->size() < config_.min_points) {
       continue;
@@ -353,11 +392,14 @@ MultiScaleGicpResult MultiScaleGicpRegistration::align(
   Eigen::Matrix4f stage_initial_guess = initial_guess;
   const RegistrationPointT voxel_origin =
       firstFinitePointOrZero(target, source);
-  for (const double leaf_size : config_.voxel_leaf_sizes) {
-    const RegistrationCloudT::Ptr stage_source =
-        downsample(source, leaf_size, voxel_origin);
-    const RegistrationCloudT::Ptr stage_target =
-        downsample(target, leaf_size, voxel_origin);
+  const std::vector<VoxelPyramidLevel> source_pyramid =
+      buildVoxelPyramidFromOrigin(source, config_.voxel_leaf_sizes, voxel_origin);
+  const std::vector<VoxelPyramidLevel> target_pyramid =
+      buildVoxelPyramidFromOrigin(target, config_.voxel_leaf_sizes, voxel_origin);
+  const std::size_t stage_count = std::min(source_pyramid.size(), target_pyramid.size());
+  for (std::size_t stage = 0; stage < stage_count; ++stage) {
+    const RegistrationCloudT::Ptr stage_source = source_pyramid[stage].cloud;
+    const RegistrationCloudT::Ptr stage_target = target_pyramid[stage].cloud;
     if (stage_source->size() < config_.min_points ||
         stage_target->size() < config_.min_points) {
       continue;
