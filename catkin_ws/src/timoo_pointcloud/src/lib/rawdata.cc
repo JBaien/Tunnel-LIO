@@ -38,6 +38,41 @@
 namespace timoo_rawdata {
 inline float SQR(float val) { return val * val; }
 
+namespace {
+constexpr float kMaxPlausibleTm16WrapAzimuthDiff = 1000.0f;
+} // namespace
+
+bool resolveTm16AzimuthDiff(uint16_t current_rotation,
+                            uint16_t next_rotation,
+                            float last_azimuth_diff,
+                            float& azimuth_diff)
+{
+    const int raw_azimuth_diff =
+        static_cast<int>(next_rotation) - static_cast<int>(current_rotation);
+    const float wrapped_azimuth_diff =
+        static_cast<float>((static_cast<int>(ROTATION_MAX_UNITS) +
+                            raw_azimuth_diff) %
+                           static_cast<int>(ROTATION_MAX_UNITS));
+
+    if (raw_azimuth_diff >= 0) {
+        azimuth_diff = wrapped_azimuth_diff;
+        return true;
+    }
+
+    if (wrapped_azimuth_diff > 0.0f &&
+        wrapped_azimuth_diff <= kMaxPlausibleTm16WrapAzimuthDiff) {
+        azimuth_diff = wrapped_azimuth_diff;
+        return true;
+    }
+
+    if (last_azimuth_diff > 0.0f) {
+        azimuth_diff = last_azimuth_diff;
+        return true;
+    }
+
+    return false;
+}
+
 std::vector<std::string> split(const std::string &str, const std::string &delim)
 {
     std::vector<std::string> res;
@@ -523,7 +558,6 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
 {
     float azimuth;
     float azimuth_diff;
-    int raw_azimuth_diff;
     float last_azimuth_diff = 0;
     float azimuth_corrected_f;
     int azimuth_corrected;
@@ -549,27 +583,10 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
         // Calculate difference between current and next block's azimuth angle.
         azimuth = (float)(raw->blocks[block].rotation);
         if (block < (BLOCKS_PER_PACKET - 1)) {
-            raw_azimuth_diff =
-                raw->blocks[block + 1].rotation - raw->blocks[block].rotation;
-            azimuth_diff = (float)((36000 + raw_azimuth_diff) % 36000);
-            // some packets contain an angle overflow where azimuth_diff < 0
-            if (raw_azimuth_diff < 0) // raw->blocks[block+1].rotation -
-                                      // raw->blocks[block].rotation < 0)
-            {
-                // ROS_WARN_STREAM_THROTTLE(60, "Packet containing angle
-                // overflow, first angle: " << raw->blocks[block].rotation << "
-                // second angle: " << raw->blocks[block+1].rotation);
-                // if last_azimuth_diff was not zero, we can assume that the
-                // timoo's speed did not change very much and use the same
-                // difference
-                if (last_azimuth_diff > 0) {
-                    azimuth_diff = last_azimuth_diff;
-                }
-                // otherwise we are not able to use this data
-                // TODO: we might just not use the second 16 firings
-                else {
-                    continue;
-                }
+            if (!resolveTm16AzimuthDiff(raw->blocks[block].rotation,
+                                        raw->blocks[block + 1].rotation,
+                                        last_azimuth_diff, azimuth_diff)) {
+                continue;
             }
             last_azimuth_diff = azimuth_diff;
         } else {

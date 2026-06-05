@@ -132,6 +132,11 @@ typedef struct raw_packet {
     uint8_t status[PACKET_STATUS_SIZE];
 } raw_packet_t;
 
+bool resolveTm16AzimuthDiff(uint16_t current_rotation,
+                            uint16_t next_rotation,
+                            float last_azimuth_diff,
+                            float& azimuth_diff);
+
 // string spllit
 std::vector<std::string> split(const std::string& str,
                                const std::string& delim);

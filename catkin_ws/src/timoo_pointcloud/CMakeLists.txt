@@ -74,6 +74,10 @@ if(CATKIN_ENABLE_TESTING)
     target_compile_definitions(timoo_gen_calibration_script_test PRIVATE
       GEN_CALIBRATION_SCRIPT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/scripts")
   endif()
+  catkin_add_gtest(timoo_rawdata_tm16_test test/rawdata_tm16_test.cpp)
+  if(TARGET timoo_rawdata_tm16_test)
+    target_link_libraries(timoo_rawdata_tm16_test timoo_rawdata ${catkin_LIBRARIES})
+  endif()
 endif()
 
 install(DIRECTORY include/${PROJECT_NAME}/
