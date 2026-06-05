@@ -32,6 +32,30 @@ TEST(ImuDeskewing, RotatesPointsToScanStartUsingPointTime) {
   EXPECT_TRUE(stats.used_imu);
 }
 
+TEST(ImuDeskewing, AppliesConstantAccelerationTranslationWhenEnabled) {
+  std::vector<lio_preprocess::PointTuple> points;
+  points.push_back(lio_preprocess::PointTuple{0.0, 0.0, 0.0, 0.0});
+  points.push_back(lio_preprocess::PointTuple{0.0, 0.0, 0.0, 1.0});
+  std::vector<lio_preprocess::ImuAngularSample> samples;
+  samples.push_back(lio_preprocess::ImuAngularSample{0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0});
+  samples.push_back(lio_preprocess::ImuAngularSample{1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0});
+
+  lio_preprocess::DeskewConfig config;
+  config.enabled = true;
+  config.reference = "start";
+  config.max_abs_point_time = 2.0;
+  config.enable_translation_compensation = true;
+  lio_preprocess::DeskewStats stats;
+  const std::vector<lio_preprocess::PointTuple> corrected =
+      lio_preprocess::deskewPointTuples(points, std::vector<std::string>{"x", "y", "z", "time"}, 0.0, samples, config, &stats);
+
+  ASSERT_EQ(2u, corrected.size());
+  EXPECT_NEAR(0.0, corrected[0][0], 1e-9);
+  EXPECT_NEAR(1.0, corrected[1][0], 1e-9);
+  EXPECT_EQ(2, stats.translation_compensated_points);
+  EXPECT_EQ(0, stats.invalid_linear_acceleration);
+}
+
 TEST(ImuDeskewing, KeepsPointsWhenTimeFieldIsMissing) {
   std::vector<lio_preprocess::PointTuple> points;
   points.push_back(lio_preprocess::PointTuple{1.0, 0.0, 0.0, 20.0});

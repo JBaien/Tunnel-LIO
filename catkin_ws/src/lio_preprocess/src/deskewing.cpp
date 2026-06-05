@@ -20,7 +20,9 @@ bool validDeskewConfig(const DeskewConfig& config) {
   }
   if (!std::isfinite(config.point_time_scale) ||
       !std::isfinite(config.max_abs_point_time) ||
+      !std::isfinite(config.max_abs_acceleration) ||
       config.max_abs_point_time < 0.0 ||
+      config.max_abs_acceleration < 0.0 ||
       config.point_time_fields.empty()) {
     return false;
   }
@@ -31,6 +33,31 @@ bool validDeskewConfig(const DeskewConfig& config) {
     }
   }
   return true;
+}
+
+bool validImuSample(const ImuAngularSample& sample, const DeskewConfig& config, DeskewStats* stats) {
+  const bool angular_ok =
+      std::isfinite(sample.stamp) &&
+      std::isfinite(sample.wx) &&
+      std::isfinite(sample.wy) &&
+      std::isfinite(sample.wz);
+  if (!angular_ok) {
+    return false;
+  }
+  if (!config.enable_translation_compensation) {
+    return true;
+  }
+  const bool linear_ok =
+      std::isfinite(sample.ax) &&
+      std::isfinite(sample.ay) &&
+      std::isfinite(sample.az) &&
+      std::fabs(sample.ax) <= config.max_abs_acceleration &&
+      std::fabs(sample.ay) <= config.max_abs_acceleration &&
+      std::fabs(sample.az) <= config.max_abs_acceleration;
+  if (!linear_ok && stats != nullptr) {
+    ++stats->invalid_linear_acceleration;
+  }
+  return linear_ok;
 }
 
 bool validImuAngularSample(const ImuAngularSample& sample) {
@@ -74,6 +101,40 @@ void meanAngularVelocity(
   *wz /= count;
 }
 
+void meanLinearAcceleration(
+    const std::vector<ImuAngularSample>& imu_samples,
+    double cloud_stamp,
+    const std::vector<double>& valid_relative_times,
+    double* ax,
+    double* ay,
+    double* az) {
+  const double min_time = *std::min_element(valid_relative_times.begin(), valid_relative_times.end());
+  const double max_time = *std::max_element(valid_relative_times.begin(), valid_relative_times.end());
+  const double start = cloud_stamp + min_time;
+  const double end = cloud_stamp + max_time;
+  std::vector<ImuAngularSample> selected;
+  for (std::vector<ImuAngularSample>::const_iterator it = imu_samples.begin(); it != imu_samples.end(); ++it) {
+    if (start - 0.02 <= it->stamp && it->stamp <= end + 0.02) {
+      selected.push_back(*it);
+    }
+  }
+  if (selected.empty()) {
+    selected = imu_samples;
+  }
+  *ax = 0.0;
+  *ay = 0.0;
+  *az = 0.0;
+  for (std::vector<ImuAngularSample>::const_iterator it = selected.begin(); it != selected.end(); ++it) {
+    *ax += it->ax;
+    *ay += it->ay;
+    *az += it->az;
+  }
+  const double count = static_cast<double>(selected.size());
+  *ax /= count;
+  *ay /= count;
+  *az /= count;
+}
+
 }  // namespace
 
 std::vector<PointTuple> deskewPointTuples(
@@ -111,7 +172,7 @@ std::vector<PointTuple> deskewPointTuples(
   valid_imu_samples.reserve(imu_samples.size());
   for (std::vector<ImuAngularSample>::const_iterator it = imu_samples.begin();
        it != imu_samples.end(); ++it) {
-    if (validImuAngularSample(*it)) {
+    if (validImuSample(*it, config, &local)) {
       valid_imu_samples.push_back(*it);
     } else {
       ++local.invalid_imu;
@@ -152,6 +213,12 @@ std::vector<PointTuple> deskewPointTuples(
   double mean_wy = 0.0;
   double mean_wz = 0.0;
   meanAngularVelocity(valid_imu_samples, cloud_stamp, valid_times, &mean_wx, &mean_wy, &mean_wz);
+  double mean_ax = 0.0;
+  double mean_ay = 0.0;
+  double mean_az = 0.0;
+  if (config.enable_translation_compensation) {
+    meanLinearAcceleration(valid_imu_samples, cloud_stamp, valid_times, &mean_ax, &mean_ay, &mean_az);
+  }
 
   std::vector<PointTuple> corrected = points;
   for (std::size_t i = 0; i < corrected.size(); ++i) {
@@ -160,6 +227,14 @@ std::vector<PointTuple> deskewPointTuples(
     }
     const double dt = reference_time - relative_times[i];
     rotateXYZ(points[i][0], points[i][1], points[i][2], mean_wx * dt, mean_wy * dt, mean_wz * dt, &corrected[i][0], &corrected[i][1], &corrected[i][2]);
+    if (config.enable_translation_compensation) {
+      const double point_t2 = relative_times[i] * relative_times[i];
+      const double reference_t2 = reference_time * reference_time;
+      corrected[i][0] += 0.5 * mean_ax * (point_t2 - reference_t2);
+      corrected[i][1] += 0.5 * mean_ay * (point_t2 - reference_t2);
+      corrected[i][2] += 0.5 * mean_az * (point_t2 - reference_t2);
+      ++local.translation_compensated_points;
+    }
     ++local.deskewed_points;
   }
   local.used_imu = local.deskewed_points > 0;

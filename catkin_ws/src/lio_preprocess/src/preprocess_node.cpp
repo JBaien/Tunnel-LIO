@@ -57,6 +57,8 @@ class PreprocessNode {
     private_nh_.param("deskew_reference", deskew_config_.reference, std::string("start"));
     private_nh_.param("point_time_scale", deskew_config_.point_time_scale, 1.0);
     private_nh_.param("max_abs_point_time", deskew_config_.max_abs_point_time, 0.2);
+    private_nh_.param("enable_translation_compensation", deskew_config_.enable_translation_compensation, false);
+    private_nh_.param("max_abs_acceleration", deskew_config_.max_abs_acceleration, 100.0);
     deskew_config_.point_time_fields.clear();
     XmlRpc::XmlRpcValue fields;
     if (private_nh_.getParam("point_time_fields", fields) && fields.getType() == XmlRpc::XmlRpcValue::TypeArray) {
@@ -82,6 +84,9 @@ class PreprocessNode {
     sample.wx = message->angular_velocity.x;
     sample.wy = message->angular_velocity.y;
     sample.wz = message->angular_velocity.z;
+    sample.ax = message->linear_acceleration.x;
+    sample.ay = message->linear_acceleration.y;
+    sample.az = message->linear_acceleration.z;
     imu_samples_.push_back(sample);
     while (static_cast<int>(imu_samples_.size()) > std::max(1, imu_buffer_size_)) {
       imu_samples_.pop_front();
@@ -183,6 +188,9 @@ class PreprocessNode {
     status.values.push_back(keyValue("deskew_invalid_point_time", last_deskew_stats_.invalid_point_time));
     status.values.push_back(keyValue("deskew_missing_imu", last_deskew_stats_.missing_imu));
     status.values.push_back(keyValue("deskew_invalid_imu", last_deskew_stats_.invalid_imu));
+    status.values.push_back(keyValue("deskew_translation_enabled", deskew_config_.enable_translation_compensation ? "true" : "false"));
+    status.values.push_back(keyValue("deskew_translation_compensated_points", last_deskew_stats_.translation_compensated_points));
+    status.values.push_back(keyValue("deskew_invalid_linear_acceleration", last_deskew_stats_.invalid_linear_acceleration));
     status.values.push_back(keyValue("deskew_invalid_config", last_deskew_stats_.invalid_config));
     status.values.push_back(keyValue("deskew_used_imu", last_deskew_stats_.used_imu ? "true" : "false"));
     array.status.push_back(status);

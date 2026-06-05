@@ -12,6 +12,9 @@ struct ImuAngularSample {
   double wx = 0.0;
   double wy = 0.0;
   double wz = 0.0;
+  double ax = 0.0;
+  double ay = 0.0;
+  double az = 0.0;
 };
 
 struct DeskewConfig {
@@ -20,6 +23,8 @@ struct DeskewConfig {
   std::vector<std::string> point_time_fields{"time", "timestamp", "t", "offset_time"};
   double point_time_scale = 1.0;
   double max_abs_point_time = 0.2;
+  bool enable_translation_compensation = false;
+  double max_abs_acceleration = 100.0;
 };
 
 struct DeskewStats {
@@ -29,7 +34,9 @@ struct DeskewStats {
   int invalid_point_time = 0;
   int missing_imu = 0;
   int invalid_imu = 0;
+  int invalid_linear_acceleration = 0;
   int invalid_config = 0;
+  int translation_compensated_points = 0;
   bool used_imu = false;
   double reference_time = 0.0;
 };
