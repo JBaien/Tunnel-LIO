@@ -53,6 +53,7 @@
 #include <timoo_driver/input.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <sstream>
 #include <string>
 #include <timoo_driver/time_conversion.hpp>
@@ -101,7 +102,8 @@ InputSocket::InputSocket(ros::NodeHandle private_nh, uint16_t port)
     ROS_INFO_STREAM("Opening UDP socket: port " << port);
     sockfd_ = socket(PF_INET, SOCK_DGRAM, 0);
     if (sockfd_ == -1) {
-        perror("socket"); // TODO: ROS_ERROR errno
+        ROS_ERROR_STREAM("socket() failed for timoo UDP port "
+                         << port << ": " << strerror(errno));
         return;
     }
 
@@ -112,7 +114,8 @@ InputSocket::InputSocket(ros::NodeHandle private_nh, uint16_t port)
     my_addr.sin_addr.s_addr = INADDR_ANY; // automatically fill in my IP
     std::cout << "LZLZLZ " << port << std::endl;
     if (bind(sockfd_, (sockaddr *)&my_addr, sizeof(sockaddr)) == -1) {
-        perror("bind"); // TODO: ROS_ERROR errno
+        ROS_ERROR_STREAM("bind() failed for timoo UDP port "
+                         << port << ": " << strerror(errno));
         return;
     }
 
@@ -245,7 +248,8 @@ InputStatusSocket::InputStatusSocket(ros::NodeHandle private_nh, uint16_t port)
     ROS_INFO_STREAM("Opening UDP socket: port " << port);
     sockfd_ = socket(PF_INET, SOCK_DGRAM, 0);
     if (sockfd_ == -1) {
-        perror("socket"); // TODO: ROS_ERROR errno
+        ROS_ERROR_STREAM("socket() failed for timoo status UDP port "
+                         << port << ": " << strerror(errno));
         return;
     }
 
@@ -258,7 +262,8 @@ InputStatusSocket::InputStatusSocket(ros::NodeHandle private_nh, uint16_t port)
     my_addr.sin_addr.s_addr = INADDR_ANY; // automatically fill in my IP
 
     if (bind(sockfd_, (sockaddr *)&my_addr, sizeof(sockaddr)) == -1) {
-        perror("bind"); // TODO: ROS_ERROR errno
+        ROS_ERROR_STREAM("bind() failed for timoo status UDP port "
+                         << port << ": " << strerror(errno));
         return;
     }
 

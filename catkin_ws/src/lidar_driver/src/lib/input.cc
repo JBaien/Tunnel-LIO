@@ -9,6 +9,7 @@
 #include <sys/file.h>
 #include <lidar_driver/input.h>
 #include <lidar_driver/time_conversion.hpp>
+#include <cstring>
 
 namespace lidar_driver
 {
@@ -41,7 +42,8 @@ namespace lidar_driver
     sockfd_ = socket(PF_INET, SOCK_DGRAM, 0);
     if (sockfd_ == -1)
     {
-      perror("socket"); // TODO: ROS_ERROR errno
+      ROS_ERROR_STREAM("socket() failed for lidar UDP port " << port
+                                                             << ": " << strerror(errno));
       return;
     }
 
@@ -53,7 +55,8 @@ namespace lidar_driver
 
     if (bind(sockfd_, (sockaddr *)&my_addr, sizeof(sockaddr)) == -1)
     {
-      perror("bind"); // TODO: ROS_ERROR errno
+      ROS_ERROR_STREAM("bind() failed for lidar UDP port " << port
+                                                           << ": " << strerror(errno));
       return;
     }
 
