@@ -20,8 +20,11 @@ struct SectionConfig {
   double slice_thickness_m = 0.2;
   int angle_bins = 36;
   int min_points = 30;
+  std::string section_model = "rectangle";
   double rectangle_width_m = 4.0;
   double rectangle_height_m = 2.0;
+  double arch_wall_height_m = 1.0;
+  double arch_roof_radius_m = 2.0;
 };
 
 struct SectionObservation {
@@ -52,6 +55,7 @@ struct SectionHistoryUpdate {
 SectionObservation extractSectionPoints(const std::vector<PointXYZ>& points_xyz, double chainage_m, const SectionConfig& config);
 double estimateAngularCompleteness(const std::vector<PointYZ>& points_yz, int angle_bins = 36);
 double rectangularSectionRmse(const std::vector<PointYZ>& points_yz, double width_m, double height_m);
+double archedSectionRmse(const std::vector<PointYZ>& points_yz, double width_m, double wall_height_m, double roof_radius_m);
 std::string gradeSection(double completeness, double rmse_mm);
 bool isBetterSection(const SectionObservation& candidate,
                      const SectionObservation& current);

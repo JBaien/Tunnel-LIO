@@ -23,8 +23,11 @@ class SectionManagerNode {
     private_nh_.param("slice_thickness_m", config_.slice_thickness_m, 0.2);
     private_nh_.param("angle_bins", config_.angle_bins, 36);
     private_nh_.param("min_points", config_.min_points, 30);
+    private_nh_.param("section_model", config_.section_model, std::string("rectangle"));
     private_nh_.param("rectangle_width_m", config_.rectangle_width_m, 4.0);
     private_nh_.param("rectangle_height_m", config_.rectangle_height_m, 2.0);
+    private_nh_.param("arch_wall_height_m", config_.arch_wall_height_m, 1.0);
+    private_nh_.param("arch_roof_radius_m", config_.arch_roof_radius_m, 2.0);
     private_nh_.param("section_spacing_m", section_spacing_m_, 1.0);
     private_nh_.param("max_export_history", max_export_history_, 1000);
     private_nh_.param("session_id", session_id_, std::string("unassigned"));

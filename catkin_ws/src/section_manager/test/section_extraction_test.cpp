@@ -50,6 +50,37 @@ TEST(SectionExtraction, RectangularRmseAndGrade) {
   EXPECT_EQ("C", section_manager::gradeSection(0.40, 60.0));
 }
 
+TEST(SectionExtraction, ArchedRmseAndExtractionModel) {
+  std::vector<section_manager::PointYZ> points;
+  points.push_back(section_manager::PointYZ{-2.0, 0.0});
+  points.push_back(section_manager::PointYZ{2.0, 0.0});
+  points.push_back(section_manager::PointYZ{-2.0, 0.8});
+  points.push_back(section_manager::PointYZ{2.0, 0.8});
+  points.push_back(section_manager::PointYZ{0.0, 3.0});
+  points.push_back(section_manager::PointYZ{std::sqrt(2.0), 1.0 + std::sqrt(2.0)});
+  points.push_back(section_manager::PointYZ{-std::sqrt(2.0), 1.0 + std::sqrt(2.0)});
+
+  EXPECT_NEAR(0.0, section_manager::archedSectionRmse(points, 4.0, 1.0, 2.0), 1e-9);
+  EXPECT_TRUE(std::isinf(section_manager::archedSectionRmse(points, -4.0, 1.0, 2.0)));
+
+  std::vector<section_manager::PointXYZ> points_xyz;
+  for (const auto& point : points) {
+    points_xyz.push_back(section_manager::PointXYZ{12.0, point.y, point.z});
+  }
+  section_manager::SectionConfig config;
+  config.slice_thickness_m = 0.2;
+  config.section_model = "arch";
+  config.rectangle_width_m = 4.0;
+  config.arch_wall_height_m = 1.0;
+  config.arch_roof_radius_m = 2.0;
+
+  const section_manager::SectionObservation section =
+      section_manager::extractSectionPoints(points_xyz, 12.0, config);
+
+  ASSERT_EQ(points.size(), section.points_yz.size());
+  EXPECT_NEAR(0.0, section.rmse_mm, 1e-9);
+}
+
 TEST(SectionExtraction, RejectsInvalidExtractionConfigAndPoints) {
   const double nan = std::numeric_limits<double>::quiet_NaN();
   std::vector<section_manager::PointXYZ> points;

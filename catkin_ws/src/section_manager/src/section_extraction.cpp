@@ -23,10 +23,22 @@ bool finitePoint(const PointYZ& point) {
 }
 
 bool validSectionConfig(const SectionConfig& config) {
-  return finiteDouble(config.slice_thickness_m) && config.slice_thickness_m > 0.0 &&
-         config.angle_bins > 0 && config.min_points >= 0 &&
-         finiteDouble(config.rectangle_width_m) && config.rectangle_width_m > 0.0 &&
-         finiteDouble(config.rectangle_height_m) && config.rectangle_height_m > 0.0;
+  const bool common_valid =
+      finiteDouble(config.slice_thickness_m) && config.slice_thickness_m > 0.0 &&
+      config.angle_bins > 0 && config.min_points >= 0 &&
+      finiteDouble(config.rectangle_width_m) && config.rectangle_width_m > 0.0 &&
+      finiteDouble(config.rectangle_height_m) && config.rectangle_height_m > 0.0;
+  if (!common_valid) {
+    return false;
+  }
+  if (config.section_model == "rectangle") {
+    return true;
+  }
+  if (config.section_model == "arch") {
+    return finiteDouble(config.arch_wall_height_m) && config.arch_wall_height_m > 0.0 &&
+           finiteDouble(config.arch_roof_radius_m) && config.arch_roof_radius_m > 0.0;
+  }
+  return false;
 }
 
 SectionObservation rejectedObservation(double chainage_m) {
@@ -111,7 +123,18 @@ SectionObservation extractSectionPoints(const std::vector<PointXYZ>& points_xyz,
     return observation;
   }
   observation.completeness = estimateAngularCompleteness(observation.points_yz, config.angle_bins);
-  observation.rmse_mm = rectangularSectionRmse(observation.points_yz, config.rectangle_width_m, config.rectangle_height_m);
+  if (config.section_model == "arch") {
+    observation.rmse_mm = archedSectionRmse(
+        observation.points_yz,
+        config.rectangle_width_m,
+        config.arch_wall_height_m,
+        config.arch_roof_radius_m);
+  } else {
+    observation.rmse_mm = rectangularSectionRmse(
+        observation.points_yz,
+        config.rectangle_width_m,
+        config.rectangle_height_m);
+  }
   observation.quality = gradeSection(observation.completeness, observation.rmse_mm);
   return observation;
 }
@@ -153,6 +176,39 @@ double rectangularSectionRmse(const std::vector<PointYZ>& points_yz, double widt
     }
     const double distance_to_wall = std::min(std::fabs(std::fabs(it->y) - half_w), std::fabs(std::fabs(it->z) - half_h));
     squared_sum += distance_to_wall * distance_to_wall;
+    ++valid_points;
+  }
+  if (valid_points == 0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return std::sqrt(squared_sum / static_cast<double>(valid_points)) * 1000.0;
+}
+
+double archedSectionRmse(const std::vector<PointYZ>& points_yz, double width_m, double wall_height_m, double roof_radius_m) {
+  if (points_yz.empty() || !finiteDouble(width_m) || !finiteDouble(wall_height_m) ||
+      !finiteDouble(roof_radius_m) || width_m <= 0.0 || wall_height_m <= 0.0 ||
+      roof_radius_m <= 0.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  const double half_w = width_m * 0.5;
+  double squared_sum = 0.0;
+  std::size_t valid_points = 0;
+  for (std::vector<PointYZ>::const_iterator it = points_yz.begin(); it != points_yz.end(); ++it) {
+    if (!finitePoint(*it)) {
+      continue;
+    }
+    const double floor_distance = std::fabs(it->z);
+    const double wall_distance = std::fabs(std::fabs(it->y) - half_w);
+    const double roof_radius = std::sqrt(it->y * it->y + (it->z - wall_height_m) * (it->z - wall_height_m));
+    const double roof_distance = std::fabs(roof_radius - roof_radius_m);
+    double boundary_distance = floor_distance;
+    if (it->z <= wall_height_m + 1e-9) {
+      boundary_distance = std::min(boundary_distance, wall_distance);
+    }
+    if (it->z >= wall_height_m - 1e-9) {
+      boundary_distance = std::min(boundary_distance, roof_distance);
+    }
+    squared_sum += boundary_distance * boundary_distance;
     ++valid_points;
   }
   if (valid_points == 0) {

@@ -11,5 +11,8 @@ section_spacing_m: 1.0
 max_export_history: 1000
 angle_bins: 36
 min_points: 30
+section_model: rectangle
 rectangle_width_m: 4.0
 rectangle_height_m: 2.0
+arch_wall_height_m: 1.0
+arch_roof_radius_m: 2.0
