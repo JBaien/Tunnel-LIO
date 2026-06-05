@@ -1,4 +1,4 @@
-add_library(lidar_rawdata rawdata.cc calibration.cc)
+add_library(lidar_rawdata rawdata.cc calibration.cc guj120_time_model.cc)
 target_link_libraries(lidar_rawdata 
                       ${catkin_LIBRARIES}
                       ${YAML_CPP_LIBRARIES})

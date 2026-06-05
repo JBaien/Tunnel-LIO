@@ -32,6 +32,7 @@ public:
 
 private:
   void processScan(const lidar_msgs::lidarScan::ConstPtr& scanMsg);
+  void produceTimingDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
 
   // Pointer to dynamic reconfigure service srv_
   boost::shared_ptr<dynamic_reconfigure::Server<lidar_pointcloud::TransformNodeConfig>> srv_;

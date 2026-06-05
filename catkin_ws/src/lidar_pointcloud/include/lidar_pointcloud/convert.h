@@ -27,6 +27,7 @@ class Convert
   private:
     void callback(lidar_pointcloud::CloudNodeConfig &config, uint32_t level);
     void processScan(const lidar_msgs::lidarScan::ConstPtr &scanMsg);
+    void produceTimingDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat);
 
     boost::shared_ptr<dynamic_reconfigure::Server<lidar_pointcloud::CloudNodeConfig> > srv_;
 

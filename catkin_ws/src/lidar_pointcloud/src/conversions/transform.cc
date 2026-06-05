@@ -61,6 +61,7 @@ namespace lidar_pointcloud
     diag_max_freq_ = 20.0;
     using namespace diagnostic_updater;
     diag_topic_.reset(new TopicDiagnostic("lidar_points", diagnostics_, FrequencyStatusParam(&diag_min_freq_, &diag_max_freq_, 0.1, 10), TimeStampStatusParam()));
+    diagnostics_.add("guj120_time_model", this, &Transform::produceTimingDiagnostics);
 
   }
   
@@ -105,6 +106,7 @@ namespace lidar_pointcloud
 
     // allocate a point cloud with same time and frame ID as raw data
     container_ptr->setup(scanMsg);
+    data_->resetTimingDiagnostics();
 
     // process each packet provided by the driver
     for (size_t i = 0; i < scanMsg->packets.size()-1; ++i)
@@ -122,6 +124,33 @@ namespace lidar_pointcloud
 
     diag_topic_->tick(scanMsg->header.stamp);
     diagnostics_.update();
+  }
+
+  void Transform::produceTimingDiagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
+  {
+    const lidar_pointcloud::Guj120TimingStats stats = data_->timingDiagnostics();
+    if (stats.packet_count == 0)
+    {
+      stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "waiting_for_guj120_packets");
+    }
+    else if (stats.invalid_packet_count == 0 &&
+             stats.azimuth_nonmonotonic_packet_count == 0 &&
+             stats.device_time_regression_count == 0)
+    {
+      stat.summary(diagnostic_msgs::DiagnosticStatus::OK, "guj120_time_model_ok");
+    }
+    else
+    {
+      stat.summary(diagnostic_msgs::DiagnosticStatus::WARN, "guj120_time_model_warning");
+    }
+    stat.add("packet_count", stats.packet_count);
+    stat.add("valid_packet_count", stats.valid_packet_count);
+    stat.add("invalid_packet_count", stats.invalid_packet_count);
+    stat.add("azimuth_nonmonotonic_packet_count", stats.azimuth_nonmonotonic_packet_count);
+    stat.add("device_time_regression_count", stats.device_time_regression_count);
+    stat.add("has_latest_device_timestamp", stats.has_latest_device_timestamp ? "YES" : "NO");
+    stat.add("latest_device_timestamp_us", stats.latest_device_timestamp_us);
+    stat.add("latest_device_timestamp_delta_us", stats.latest_device_timestamp_delta_us);
   }
 
 } // namespace lidar_pointcloud

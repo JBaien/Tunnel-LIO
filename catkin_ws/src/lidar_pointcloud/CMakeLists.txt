@@ -68,6 +68,13 @@ catkin_package(
 add_subdirectory(src/lib)
 add_subdirectory(src/conversions)
 
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(guj120_time_model_test test/guj120_time_model_test.cpp)
+  if(TARGET guj120_time_model_test)
+    target_link_libraries(guj120_time_model_test lidar_rawdata ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
+  endif()
+endif()
+
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(FILES nodelets.xml

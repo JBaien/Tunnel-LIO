@@ -11,6 +11,7 @@
 #include <lidar_msgs/lidarScan.h>
 #include <lidar_pointcloud/calibration.h>
 #include <lidar_pointcloud/datacontainerbase.h>
+#include <lidar_pointcloud/guj120_time_model.h>
 
 namespace lidar_rawdata
 {
@@ -126,6 +127,8 @@ public:
   void setParameters(double min_range, double max_range, double view_direction, double view_width);
 
   int scansPerPacket() const;
+  void resetTimingDiagnostics();
+  lidar_pointcloud::Guj120TimingStats timingDiagnostics() const;
 
 private:
   /** configuration parameters */
@@ -149,6 +152,7 @@ private:
   lidar_pointcloud::Calibration calibration_;
   float sin_rot_table_[ROTATION_MAX_UNITS];
   float cos_rot_table_[ROTATION_MAX_UNITS];
+  lidar_pointcloud::Guj120TimingTracker timing_tracker_;
 
   /** add private function to handle the lidar **/
   void unpack_lidar(const lidar_msgs::lidarPacket& pkt, DataContainerBase& data, int sn_packet,const ros::Time& scan_start_time);

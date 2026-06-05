@@ -50,6 +50,16 @@ namespace lidar_rawdata
     }
   }
 
+  void RawData::resetTimingDiagnostics()
+  {
+    timing_tracker_.reset();
+  }
+
+  lidar_pointcloud::Guj120TimingStats RawData::timingDiagnostics() const
+  {
+    return timing_tracker_.stats();
+  }
+
   /** Set up for on-line operation. */
   boost::optional<lidar_pointcloud::Calibration> RawData::setup(ros::NodeHandle private_nh)
   {
@@ -166,6 +176,9 @@ namespace lidar_rawdata
 
     //
     const raw_packet_t *raw = (const raw_packet_t *)&pkt.data[0];
+    lidar_pointcloud::Guj120PacketTimeInfo packet_timing;
+    lidar_pointcloud::parseGuj120PacketTimeInfo(&pkt.data[0], pkt.data.size(), &packet_timing);
+    timing_tracker_.observe(packet_timing);
     float time_diff_start_to_this_packet = (pkt.stamp - scan_start_time).toSec();
     union two_bytes tmp;
 
@@ -265,13 +278,21 @@ namespace lidar_rawdata
         // x = int(x * 1000) / 1000.0f;
         //y = int(y * 1000) / 1000.0f;
         //z = int(z * 1000) / 1000.0f;
-        double Treal = time_diff_start_to_this_packet + ((51*(block*2))+(3*ch))/1000000.0;
-        data.addPoint(y, -x, z, (int)TABLE_COMP[ch][4], alpha, deepth, intensity,Treal);
+        const lidar_pointcloud::Guj120PointTiming point_timing =
+            lidar_pointcloud::computeGuj120PointTiming(packet_timing, block, 0, ch);
+        const double Treal =
+            time_diff_start_to_this_packet +
+            (point_timing.valid ? point_timing.offset_s : ((51*(block*2))+(3*ch))/1000000.0);
+        const uint16_t point_azimuth =
+            point_timing.valid ? point_timing.azimuth : static_cast<uint16_t>(alpha);
+        data.addPoint(y, -x, z, (int)TABLE_COMP[ch][4], point_azimuth, deepth, intensity,Treal);
         pos_base += 3;
       }
       data.newLine();
 
-      azimuth += 18;
+      const uint16_t next_block_azimuth =
+          packet_timing.valid ? packet_timing.block_azimuths[static_cast<std::size_t>((block + 1) % 12)] :
+                                static_cast<uint16_t>(((int)azimuth + 18) % 36000);
       pos_base = 48;
       for (int ch = 0; ch < 16; ch++)
       {
@@ -286,7 +307,11 @@ namespace lidar_rawdata
         //垂直角
         omega = ((int)(TABLE_COMP[ch][0] + 36000)) % 36000;
         //水平角
-        alpha = ((int)(azimuth + TABLE_COMP[ch][1])) % 36000;
+        const uint16_t firing_azimuth =
+            packet_timing.valid ?
+            lidar_pointcloud::interpolateGuj120Azimuth(raw->blocks[block].rotation, next_block_azimuth, 0.5) :
+            static_cast<uint16_t>(((int)azimuth + 18) % 36000);
+        alpha = ((int)(firing_azimuth + TABLE_COMP[ch][1])) % 36000;
         if (deepth < config_.min_range)
         {
           x = NAN;
@@ -311,8 +336,14 @@ namespace lidar_rawdata
         //y = int(y * 1000) / 1000.0f;
         //z = int(z * 1000) / 1000.0f;
         //这里一定要是double，float的精度不够
-        double Treal = time_diff_start_to_this_packet + ((51*(block*2+1))+(3*ch))/1000000.0;
-        data.addPoint(y, -x, z, (int)TABLE_COMP[ch][4], alpha, deepth, intensity,Treal);
+        const lidar_pointcloud::Guj120PointTiming point_timing =
+            lidar_pointcloud::computeGuj120PointTiming(packet_timing, block, 1, ch);
+        const double Treal =
+            time_diff_start_to_this_packet +
+            (point_timing.valid ? point_timing.offset_s : ((51*(block*2+1))+(3*ch))/1000000.0);
+        const uint16_t point_azimuth =
+            point_timing.valid ? point_timing.azimuth : static_cast<uint16_t>(alpha);
+        data.addPoint(y, -x, z, (int)TABLE_COMP[ch][4], point_azimuth, deepth, intensity,Treal);
         pos_base += 3;
       }
       data.newLine();
