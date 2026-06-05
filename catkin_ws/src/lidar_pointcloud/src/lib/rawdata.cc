@@ -180,11 +180,10 @@ namespace lidar_rawdata
     lidar_pointcloud::parseGuj120PacketTimeInfo(&pkt.data[0], pkt.data.size(), &packet_timing);
     timing_tracker_.observe(packet_timing);
     float time_diff_start_to_this_packet = (pkt.stamp - scan_start_time).toSec();
-    union two_bytes tmp;
 
     if (sn_packet == 0)
     {
-      if (raw->blocks[0].rotation < 10000)
+      if (rawBlockRotation(raw->blocks[0]) < 10000)
       {
         block_start = 0;
         block_end = 12;
@@ -193,7 +192,9 @@ namespace lidar_rawdata
       {
         for (int i = 0; i < 11; i++)
         {
-          if (std::abs(raw->blocks[i + 1].rotation - raw->blocks[i].rotation) > 1000)
+          const int next_rotation = rawBlockRotation(raw->blocks[i + 1]);
+          const int current_rotation = rawBlockRotation(raw->blocks[i]);
+          if (std::abs(next_rotation - current_rotation) > 1000)
           {
             block_start = i + 1;
             block_end = 12;
@@ -202,7 +203,7 @@ namespace lidar_rawdata
       }
       // here monitor the head azmith
       uint16_t azi_first;
-      azi_first = raw->blocks[block_start].rotation;
+      azi_first = rawBlockRotation(raw->blocks[block_start]);
 
       //std::cout << "rawdata az start: " << std::to_string(block_start)
       //          << ":" <<  std::to_string(azi_first)
@@ -214,14 +215,16 @@ namespace lidar_rawdata
       block_end = 12;
       for (int i = 0; i < 11; i++)
       {
-        if (std::abs(raw->blocks[i + 1].rotation - raw->blocks[i].rotation) > 1000)
+        const int next_rotation = rawBlockRotation(raw->blocks[i + 1]);
+        const int current_rotation = rawBlockRotation(raw->blocks[i]);
+        if (std::abs(next_rotation - current_rotation) > 1000)
         {
           block_end = i + 1;
         }
       }
       // here monitor the end azmith
       uint16_t azi_end;
-      azi_end = raw->blocks[block_end - 1].rotation;
+      azi_end = rawBlockRotation(raw->blocks[block_end - 1]);
     }
     else
     {
@@ -238,18 +241,16 @@ namespace lidar_rawdata
       // Y=R * cos(ω) * cos(α) - h_off * sin(α)
       // Z=R * sin(ω) + v_off
       //取得角度
-      azimuth = (float)(raw->blocks[block].rotation);
+      const raw_block_t& raw_block = raw->blocks[block];
+      const uint16_t block_rotation = rawBlockRotation(raw_block);
+      azimuth = (float)(block_rotation);
       pos_base = 0;
       for (int ch = 0; ch < 16; ch++)
       {
-        //union two_bytes tmp;
-
-        tmp.bytes[0] = raw->blocks[block].data[pos_base];     //深度数据 低位
-        tmp.bytes[1] = raw->blocks[block].data[pos_base + 1]; //深度数据 高位
-                                                              //取得距离
-        deepth = tmp.uint * distance_resolution;
+        const uint16_t distance_raw = rawBlockDistance(raw_block, pos_base);
+        deepth = distance_raw * distance_resolution;
         //取得反射率
-        intensity = raw->blocks[block].data[pos_base + 2];
+        intensity = raw_block.data[pos_base + 2];
         //垂直角
         omega = ((int)(TABLE_COMP[ch][0] + 36000)) % 36000;
         //水平角
@@ -296,20 +297,16 @@ namespace lidar_rawdata
       pos_base = 48;
       for (int ch = 0; ch < 16; ch++)
       {
-        //union two_bytes tmp;
-
-        tmp.bytes[0] = raw->blocks[block].data[pos_base];     //depth low
-        tmp.bytes[1] = raw->blocks[block].data[pos_base + 1]; //depth high
-        //距离
-        deepth = tmp.uint * distance_resolution;
+        const uint16_t distance_raw = rawBlockDistance(raw_block, pos_base);
+        deepth = distance_raw * distance_resolution;
         //反射率
-        intensity = raw->blocks[block].data[pos_base + 2];
+        intensity = raw_block.data[pos_base + 2];
         //垂直角
         omega = ((int)(TABLE_COMP[ch][0] + 36000)) % 36000;
         //水平角
         const uint16_t firing_azimuth =
             packet_timing.valid ?
-            lidar_pointcloud::interpolateGuj120Azimuth(raw->blocks[block].rotation, next_block_azimuth, 0.5) :
+            lidar_pointcloud::interpolateGuj120Azimuth(block_rotation, next_block_azimuth, 0.5) :
             static_cast<uint16_t>(((int)azimuth + 18) % 36000);
         alpha = ((int)(firing_azimuth + TABLE_COMP[ch][1])) % 36000;
         if (deepth < config_.min_range)

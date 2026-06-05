@@ -358,9 +358,11 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
     for (int i = 0; i < BLOCKS_PER_PACKET; i++) {
         // upper bank lasers are numbered [0..31]
         // NOTE: this is a change from the old timoo_common implementation
+        const raw_block_t &block = raw->blocks[i];
+        const uint16_t block_rotation = rawBlockRotation(block);
 
         int bank_origin = 0;
-        if (raw->blocks[i].header == LOWER_BANK) {
+        if (rawBlockHeader(block) == LOWER_BANK) {
             // lower bank lasers are [32..63]
             bank_origin = 32;
         }
@@ -374,30 +376,28 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
                 calibration_.laser_corrections[laser_number];
 
             /** Position Calculation */
-            const raw_block_t &block = raw->blocks[i];
-            union two_bytes tmp;
-            tmp.bytes[0] = block.data[k];
-            tmp.bytes[1] = block.data[k + 1];
-            if (tmp.bytes[0] == 0 && tmp.bytes[1] == 0) // no laser beam return
+            const uint16_t distance_raw = rawBlockDistance(block, k);
+            if (distance_raw == 0) // no laser beam return
             {
                 continue;
             }
 
             /*condition added to avoid calculating points which are not
               in the interesting defined area (min_angle < area < max_angle)*/
-            if ((block.rotation >= config_.left_min_angle &&
-                 block.rotation <= config_.left_max_angle &&
+            if ((block_rotation >= config_.left_min_angle &&
+                 block_rotation <= config_.left_max_angle &&
                  config_.left_min_angle < config_.left_max_angle) ||
                 (config_.left_min_angle > config_.left_max_angle &&
-                 (raw->blocks[i].rotation <= config_.left_max_angle ||
-                  raw->blocks[i].rotation >= config_.left_min_angle)) ||
-                (block.rotation >= config_.right_min_angle &&
-                 block.rotation <= config_.right_max_angle &&
+                 (block_rotation <= config_.left_max_angle ||
+                  block_rotation >= config_.left_min_angle)) ||
+                (block_rotation >= config_.right_min_angle &&
+                 block_rotation <= config_.right_max_angle &&
                  config_.right_min_angle < config_.right_max_angle) ||
                 (config_.right_min_angle > config_.right_max_angle &&
-                 (raw->blocks[i].rotation <= config_.right_max_angle ||
-                  raw->blocks[i].rotation >= config_.right_min_angle))) {
-                float distance = tmp.uint * calibration_.distance_resolution_m;
+                 (block_rotation <= config_.right_max_angle ||
+                  block_rotation >= config_.right_min_angle))) {
+                float distance =
+                    distance_raw * calibration_.distance_resolution_m;
                 distance += corrections.dist_correction;
 
                 float cos_vert_angle = corrections.cos_vert_correction;
@@ -408,11 +408,11 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
                 // cos(a-b) = cos(a)*cos(b) + sin(a)*sin(b)
                 // sin(a-b) = sin(a)*cos(b) - cos(a)*sin(b)
                 float cos_rot_angle =
-                    cos_rot_table_[block.rotation] * cos_rot_correction +
-                    sin_rot_table_[block.rotation] * sin_rot_correction;
+                    cos_rot_table_[block_rotation] * cos_rot_correction +
+                    sin_rot_table_[block_rotation] * sin_rot_correction;
                 float sin_rot_angle =
-                    sin_rot_table_[block.rotation] * cos_rot_correction -
-                    cos_rot_table_[block.rotation] * sin_rot_correction;
+                    sin_rot_table_[block_rotation] * cos_rot_correction -
+                    cos_rot_table_[block_rotation] * sin_rot_correction;
 
                 float horiz_offset = corrections.horiz_offset_correction;
                 float vert_offset = corrections.vert_offset_correction;
@@ -491,7 +491,7 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
                 float min_intensity = corrections.min_intensity;
                 float max_intensity = corrections.max_intensity;
 
-                intensity = raw->blocks[i].data[k + 2];
+                intensity = block.data[k + 2];
 
                 float focal_offset = 256 *
                                      (1 - corrections.focal_distance / 13100) *
@@ -501,7 +501,8 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
                     focal_slope *
                     (std::abs(
                         focal_offset -
-                        256 * SQR(1 - static_cast<float>(tmp.uint) / 65535)));
+                        256 * SQR(1 - static_cast<float>(distance_raw) /
+                                          65535)));
                 intensity =
                     (intensity < min_intensity) ? min_intensity : intensity;
                 intensity =
@@ -513,8 +514,7 @@ void RawData::unpack(const timoo_msgs::timooPacket &pkt,
                         timing_offsets[i][j] + time_diff_start_to_this_packet;
 
                 data.addPoint(x_coord, y_coord, z_coord, corrections.laser_ring,
-                              raw->blocks[i].rotation, distance, intensity,
-                              time);
+                              block_rotation, distance, intensity, time);
             }
         }
         data.newLine();
@@ -570,21 +570,25 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
     const raw_packet_t *raw = (const raw_packet_t *)&pkt.data[0];
 
     for (int block = 0; block < BLOCKS_PER_PACKET; block++) {
+        const raw_block_t& raw_block = raw->blocks[block];
+        const uint16_t block_header = rawBlockHeader(raw_block);
+        const uint16_t block_rotation = rawBlockRotation(raw_block);
+
         // ignore packets with mangled or otherwise different contents
-        if (UPPER_BANK != raw->blocks[block].header) {
+        if (UPPER_BANK != block_header) {
             // Do not flood the log with messages, only issue at most one
             // of these warnings per minute.
             ROS_WARN_STREAM_THROTTLE(60, "skipping invalid TM-16 packet: block "
                                              << block << " header value is "
-                                             << raw->blocks[block].header);
+                                             << block_header);
             return; // bad packet: skip the rest
         }
 
         // Calculate difference between current and next block's azimuth angle.
-        azimuth = (float)(raw->blocks[block].rotation);
+        azimuth = (float)(block_rotation);
         if (block < (BLOCKS_PER_PACKET - 1)) {
-            if (!resolveTm16AzimuthDiff(raw->blocks[block].rotation,
-                                        raw->blocks[block + 1].rotation,
+            if (!resolveTm16AzimuthDiff(block_rotation,
+                                        rawBlockRotation(raw->blocks[block + 1]),
                                         last_azimuth_diff, azimuth_diff)) {
                 continue;
             }
@@ -600,9 +604,7 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
                     calibration_.laser_corrections[dsr];
 
                 /** Position Calculation */
-                union two_bytes tmp;
-                tmp.bytes[0] = raw->blocks[block].data[k];
-                tmp.bytes[1] = raw->blocks[block].data[k + 1];
+                const uint16_t distance_raw = rawBlockDistance(raw_block, k);
 
                 /** correct for the laser rotation as a function of timing
                  * during the firings **/
@@ -632,7 +634,7 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
                          azimuth_corrected >= config_.right_min_angle)))))) {
                     // convert polar coordinates to Euclidean XYZ
                     float distance =
-                        tmp.uint * calibration_.distance_resolution_m;
+                        distance_raw * calibration_.distance_resolution_m;
                     distance += corrections.dist_correction;
 
                     float cos_vert_angle = corrections.cos_vert_correction;
@@ -726,14 +728,15 @@ void RawData::unpack_tm16(const timoo_msgs::timooPacket &pkt,
                     float min_intensity = corrections.min_intensity;
                     float max_intensity = corrections.max_intensity;
 
-                    intensity = raw->blocks[block].data[k + 2];
+                    intensity = raw_block.data[k + 2];
 
                     float focal_offset =
                         256 * SQR(1 - corrections.focal_distance / 13100);
                     float focal_slope = corrections.focal_slope;
                     intensity += focal_slope *
                                  (std::abs(focal_offset -
-                                           256 * SQR(1 - tmp.uint / 65535)));
+                                           256 * SQR(1 - distance_raw /
+                                                        65535)));
                     intensity =
                         (intensity < min_intensity) ? min_intensity : intensity;
                     intensity =

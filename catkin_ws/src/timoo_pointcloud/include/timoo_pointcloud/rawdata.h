@@ -75,9 +75,14 @@ static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 static const float ROTATION_RESOLUTION = 0.01f;    // [deg]
 static const uint16_t ROTATION_MAX_UNITS = 36000u; // [deg/100]
 
-/** @todo make this work for both big and little-endian machines */
 static const uint16_t UPPER_BANK = 0xeeff;
 static const uint16_t LOWER_BANK = 0xddff;
+
+static inline uint16_t readLittleEndianUint16(const uint8_t* bytes)
+{
+    return static_cast<uint16_t>(bytes[0]) |
+           static_cast<uint16_t>(static_cast<uint16_t>(bytes[1]) << 8);
+}
 
 /** Special Defines for TM16 support **/
 static const int TM16_FIRINGS_PER_BLOCK = 2;
@@ -99,15 +104,23 @@ typedef struct raw_block {
     uint8_t data[BLOCK_DATA_SIZE];
 } raw_block_t;
 
-/** used for unpacking the first two data bytes in a block
- *
- *  They are packed into the actual data stream misaligned.  I doubt
- *  this works on big endian machines.
- */
-union two_bytes {
-    uint16_t uint;
-    uint8_t bytes[2];
-};
+static inline uint16_t rawBlockHeader(const raw_block_t& block)
+{
+    return readLittleEndianUint16(
+        reinterpret_cast<const uint8_t*>(&block.header));
+}
+
+static inline uint16_t rawBlockRotation(const raw_block_t& block)
+{
+    return readLittleEndianUint16(
+        reinterpret_cast<const uint8_t*>(&block.rotation));
+}
+
+static inline uint16_t rawBlockDistance(const raw_block_t& block,
+                                        int data_offset)
+{
+    return readLittleEndianUint16(&block.data[data_offset]);
+}
 
 static const int PACKET_SIZE = 1206;
 static const int BLOCKS_PER_PACKET = 12;
@@ -121,10 +134,9 @@ static const int SCANS_PER_PACKET = (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
  *    seems to alternate between two different values every third
  *    packet.  One value increases, the other decreases.
  *
- *  \todo figure out if revolution is only present for one of the
- *  two types of status fields
- *
- *  status has either a temperature encoding or the microcode level
+ *  status has either a temperature encoding or the microcode level.
+ *  The status payload layout is device/firmware specific and is validated
+ *  from real packet captures before being used as acceptance evidence.
  */
 typedef struct raw_packet {
     raw_block_t blocks[BLOCKS_PER_PACKET];
