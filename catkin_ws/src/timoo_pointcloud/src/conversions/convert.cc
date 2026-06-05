@@ -102,7 +102,7 @@ void Convert::callback(timoo_pointcloud::CloudNodeConfig &config,
     if (first_rcfg_call || config.organize_cloud != config_.organize_cloud) {
         first_rcfg_call = false;
         config_.organize_cloud = config.organize_cloud;
-        if (config_.organize_cloud) // TODO only on change
+        if (config_.organize_cloud)
         {
             ROS_INFO_STREAM("Using the organized cloud format...");
             container_ptr_ =

@@ -68,6 +68,14 @@ catkin_package(
 add_subdirectory(src/lib)
 add_subdirectory(src/conversions)
 
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(timoo_gen_calibration_script_test test/gen_calibration_script_test.cpp)
+  if(TARGET timoo_gen_calibration_script_test)
+    target_compile_definitions(timoo_gen_calibration_script_test PRIVATE
+      GEN_CALIBRATION_SCRIPT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/scripts")
+  endif()
+endif()
+
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(FILES nodelets.xml

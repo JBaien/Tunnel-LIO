@@ -73,6 +73,11 @@ if(CATKIN_ENABLE_TESTING)
   if(TARGET guj120_time_model_test)
     target_link_libraries(guj120_time_model_test lidar_rawdata ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
   endif()
+  catkin_add_gtest(lidar_gen_calibration_script_test test/gen_calibration_script_test.cpp)
+  if(TARGET lidar_gen_calibration_script_test)
+    target_compile_definitions(lidar_gen_calibration_script_test PRIVATE
+      GEN_CALIBRATION_SCRIPT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/scripts")
+  endif()
 endif()
 
 install(DIRECTORY include/${PROJECT_NAME}/

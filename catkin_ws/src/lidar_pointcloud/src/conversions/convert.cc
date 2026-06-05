@@ -76,7 +76,7 @@ namespace lidar_pointcloud
     {
       first_rcfg_call = false;
       config_.organize_cloud = config.organize_cloud;
-      if (config_.organize_cloud) // TODO only on change
+      if (config_.organize_cloud)
       {
         ROS_INFO_STREAM("Using the OrganizedCloudXYZIR format...");
         container_ptr_ = boost::shared_ptr<OrganizedCloudXYZIR>(
