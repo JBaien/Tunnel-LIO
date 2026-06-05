@@ -1,0 +1,18 @@
+# 本地采集数据与测试证据包
+*.bag
+/reports/
+
+# Catkin 构建与运行产物
+/catkin_ws/build/
+/catkin_ws/devel/
+/catkin_ws/install/
+/catkin_ws/logs/
+/catkin_ws/.catkin_tools/
+/catkin_ws/.catkin_workspace
+
+# 本地外部依赖克隆或缓存
+/external_repos/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
