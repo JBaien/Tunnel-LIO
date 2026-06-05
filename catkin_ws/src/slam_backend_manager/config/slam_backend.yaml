@@ -16,6 +16,7 @@ min_intensity_bin_points: 1
 keyframe_spacing_m: 5.0
 min_loop_score: 0.5
 min_top_score_ratio: 1.5
+min_rotation_uniqueness_ratio: 1.0
 min_loop_chainage_separation_m: 10.0
 intensity_descriptor_weight: 0.0
 min_geometric_score: 0.75

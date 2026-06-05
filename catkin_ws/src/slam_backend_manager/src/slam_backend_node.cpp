@@ -71,6 +71,8 @@ class SlamBackendNode {
     config_.min_intensity_bin_points = paramInt("min_intensity_bin_points", 1);
     config_.min_loop_score = paramDouble("min_loop_score", 0.5);
     config_.min_top_score_ratio = paramDouble("min_top_score_ratio", 1.5);
+    config_.min_rotation_uniqueness_ratio =
+        paramDouble("min_rotation_uniqueness_ratio", 1.0);
     config_.min_loop_chainage_separation_m =
         paramDouble("min_loop_chainage_separation_m", 10.0);
     config_.min_geometric_score = paramDouble("min_geometric_score", 0.75);
@@ -271,6 +273,8 @@ class SlamBackendNode {
     status.values.push_back(kv("stable_entries", std::to_string(stable_ledger_.entries().size())));
     status.values.push_back(kv("descriptor_type", "geometry_intensity_context"));
     status.values.push_back(kv("sector_count", std::to_string(config_.sector_count)));
+    status.values.push_back(kv("min_rotation_uniqueness_ratio",
+                               formatDouble(config_.min_rotation_uniqueness_ratio, 3)));
     array.status.push_back(status);
     diag_pub_.publish(array);
   }

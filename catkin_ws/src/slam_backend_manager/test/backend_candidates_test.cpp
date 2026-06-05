@@ -39,6 +39,64 @@ TEST(BackendCandidates, ScanContextSimilarityAlignsRotatedSectors) {
   EXPECT_EQ("rotated", match.value.keyframe_id);
 }
 
+TEST(BackendCandidates, ScanContextMatchReportsBestYawShift) {
+  const std::vector<int> left{3, 0, 1, 0,
+                              0, 4, 0, 1};
+  const std::vector<int> rotated{0, 3, 0, 1,
+                                 1, 0, 4, 0};
+
+  const DescriptorMatch match = matchScanContextDescriptor(left, rotated, 4);
+
+  EXPECT_TRUE(match.valid);
+  EXPECT_NEAR(1.0, match.score, 1e-6);
+  EXPECT_EQ(3, match.sector_shift);
+  EXPECT_GT(match.second_best_score, 0.0);
+  EXPECT_GE(match.top_score_ratio, 1.5);
+  EXPECT_EQ("accepted", match.reason);
+}
+
+TEST(BackendCandidates, ScanContextRingKeyIgnoresSectorShift) {
+  const std::vector<int> left{3, 0, 1, 0,
+                              0, 4, 0, 1};
+  const std::vector<int> rotated{0, 3, 0, 1,
+                                 1, 0, 4, 0};
+
+  const std::vector<int> left_key = makeScanContextRingKey(left, 4);
+  const std::vector<int> rotated_key = makeScanContextRingKey(rotated, 4);
+
+  ASSERT_EQ(2u, left_key.size());
+  EXPECT_EQ(4, left_key[0]);
+  EXPECT_EQ(5, left_key[1]);
+  EXPECT_EQ(left_key, rotated_key);
+  EXPECT_NEAR(1.0, ringKeySimilarity(left_key, rotated_key), 1e-6);
+  EXPECT_TRUE(makeScanContextRingKey(left, 0).empty());
+}
+
+TEST(BackendCandidates, RotationUniquenessGateRejectsSymmetricSingleCandidate) {
+  BackendConfig config;
+  config.sector_count = 4;
+  config.min_loop_score = 0.9;
+  config.min_top_score_ratio = 1.0;
+  config.min_rotation_uniqueness_ratio = 1.2;
+  config.min_loop_chainage_separation_m = 5.0;
+
+  const Keyframe current{"now", 30.0, std::vector<int>{1, 1, 1, 1}};
+  const Keyframe symmetric{"symmetric", 0.0, std::vector<int>{1, 1, 1, 1}};
+  const OptionalLoopCandidate rejected =
+      chooseLoopCandidate(current, {symmetric}, config);
+
+  EXPECT_FALSE(rejected.has_value);
+
+  const Keyframe unique{"unique", 0.0, std::vector<int>{0, 1, 0, 0}};
+  const OptionalLoopCandidate accepted =
+      chooseLoopCandidate(Keyframe{"now", 30.0, std::vector<int>{1, 0, 0, 0}},
+                          {unique},
+                          config);
+
+  ASSERT_TRUE(accepted.has_value);
+  EXPECT_EQ("unique", accepted.value.keyframe_id);
+}
+
 TEST(BackendCandidates, ConfigurableScanContextCapsDenseBins) {
   DescriptorConfig descriptor_config;
   descriptor_config.ring_edges = {0.0, 5.0};
@@ -211,6 +269,13 @@ TEST(BackendCandidates, InvalidCandidateConfigFailsClosed) {
   EXPECT_FALSE(chooseLoopCandidate(current, {candidate}, config).has_value);
 
   config.intensity_descriptor_weight = std::numeric_limits<double>::infinity();
+  EXPECT_FALSE(chooseLoopCandidate(current, {candidate}, config).has_value);
+
+  config.intensity_descriptor_weight = 0.0;
+  config.min_rotation_uniqueness_ratio = 0.99;
+  EXPECT_FALSE(chooseLoopCandidate(current, {candidate}, config).has_value);
+
+  config.min_rotation_uniqueness_ratio = std::numeric_limits<double>::quiet_NaN();
   EXPECT_FALSE(chooseLoopCandidate(current, {candidate}, config).has_value);
 }
 

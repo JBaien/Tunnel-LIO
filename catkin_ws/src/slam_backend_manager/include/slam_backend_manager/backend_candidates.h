@@ -48,6 +48,7 @@ struct BackendConfig {
   int min_intensity_bin_points = 1;
   double min_loop_score = 0.5;
   double min_top_score_ratio = 1.5;
+  double min_rotation_uniqueness_ratio = 1.0;
   double min_loop_chainage_separation_m = 10.0;
   double min_geometric_score = 0.75;
   double max_centroid_distance_m = 0.5;
@@ -68,6 +69,15 @@ struct LoopCandidate {
 struct OptionalLoopCandidate {
   bool has_value = false;
   LoopCandidate value;
+};
+
+struct DescriptorMatch {
+  bool valid = false;
+  double score = 0.0;
+  int sector_shift = 0;
+  double second_best_score = 0.0;
+  double top_score_ratio = 0.0;
+  std::string reason;
 };
 
 struct LoopVerification {
@@ -109,6 +119,10 @@ HistogramDescriptor makeIntensityScanContextDescriptor(const std::vector<Point3>
                                                        int sector_count);
 HistogramDescriptor makeIntensityScanContextDescriptor(const std::vector<Point3>& points,
                                                        const DescriptorConfig& config);
+std::vector<int> makeScanContextRingKey(const std::vector<int>& descriptor,
+                                        int sector_count);
+double ringKeySimilarity(const std::vector<int>& left,
+                         const std::vector<int>& right);
 GeometrySummary makeGeometrySummary(const std::vector<Point3>& points);
 OptionalLoopCandidate chooseLoopCandidate(const Keyframe& current,
                                           const std::vector<Keyframe>& candidates,
@@ -122,6 +136,9 @@ IcpVerification verifyLoopIcp(const std::vector<Point3>& current_points,
 double descriptorSimilarity(const std::vector<int>& left,
                             const std::vector<int>& right,
                             int sector_count = 0);
+DescriptorMatch matchScanContextDescriptor(const std::vector<int>& left,
+                                           const std::vector<int>& right,
+                                           int sector_count);
 int qualityRank(const std::string& value);
 
 }  // namespace slam_backend_manager

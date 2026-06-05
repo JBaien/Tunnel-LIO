@@ -70,6 +70,8 @@ bool validCandidateConfig(const BackendConfig& config) {
          config.min_loop_score <= 1.0 &&
          std::isfinite(config.min_top_score_ratio) &&
          config.min_top_score_ratio >= 1.0 &&
+         std::isfinite(config.min_rotation_uniqueness_ratio) &&
+         config.min_rotation_uniqueness_ratio >= 1.0 &&
          std::isfinite(config.min_loop_chainage_separation_m) &&
          config.min_loop_chainage_separation_m >= 0.0 &&
          std::isfinite(config.intensity_descriptor_weight) &&
@@ -183,6 +185,16 @@ double descriptorSimilarityNoShift(const std::vector<int>& left, const std::vect
     total += 1.0 - std::abs(left[index] - right[index]) / static_cast<double>(denom);
   }
   return std::max(0.0, total / static_cast<double>(left.size()));
+}
+
+double topScoreRatio(const double best, const double second_best) {
+  if (best <= 0.0) {
+    return 0.0;
+  }
+  if (second_best <= 0.0) {
+    return std::numeric_limits<double>::infinity();
+  }
+  return best / second_best;
 }
 
 std::vector<Point2> toXyPoints(const std::vector<Point3>& points, const int max_points) {
@@ -462,6 +474,33 @@ HistogramDescriptor makeIntensityScanContextDescriptor(
   return descriptor;
 }
 
+std::vector<int> makeScanContextRingKey(const std::vector<int>& descriptor,
+                                        const int sector_count) {
+  if (descriptor.empty() || sector_count <= 0 || descriptor.size() % sector_count != 0 ||
+      !validDescriptorBins(descriptor)) {
+    return std::vector<int>{};
+  }
+
+  const int ring_count = static_cast<int>(descriptor.size()) / sector_count;
+  std::vector<int> ring_key(ring_count, 0);
+  for (int ring_index = 0; ring_index < ring_count; ++ring_index) {
+    const int offset = ring_index * sector_count;
+    for (int sector = 0; sector < sector_count; ++sector) {
+      ring_key[ring_index] += descriptor[offset + sector];
+    }
+  }
+  return ring_key;
+}
+
+double ringKeySimilarity(const std::vector<int>& left,
+                         const std::vector<int>& right) {
+  if (left.empty() || right.empty() || left.size() != right.size() ||
+      !validDescriptorBins(left) || !validDescriptorBins(right)) {
+    return 0.0;
+  }
+  return descriptorSimilarityNoShift(left, right);
+}
+
 GeometrySummary makeGeometrySummary(const std::vector<Point3>& points) {
   GeometrySummary summary;
   if (points.empty()) {
@@ -526,8 +565,16 @@ OptionalLoopCandidate chooseLoopCandidate(const Keyframe& current,
         config.min_loop_chainage_separation_m) {
       continue;
     }
-    const double geometry_score =
-        descriptorSimilarity(current.descriptor, candidate.descriptor, config.sector_count);
+    const DescriptorMatch geometry_match =
+        matchScanContextDescriptor(current.descriptor, candidate.descriptor, config.sector_count);
+    if (!geometry_match.valid) {
+      continue;
+    }
+    if (config.min_rotation_uniqueness_ratio > 1.0 &&
+        geometry_match.top_score_ratio < config.min_rotation_uniqueness_ratio) {
+      continue;
+    }
+    const double geometry_score = geometry_match.score;
     double score = geometry_score;
     if (config.intensity_descriptor_weight > 0.0 &&
         !current.intensity_descriptor.empty() &&
@@ -640,18 +687,48 @@ IcpVerification verifyLoopIcp(const std::vector<Point3>& current_points,
 double descriptorSimilarity(const std::vector<int>& left,
                             const std::vector<int>& right,
                             const int sector_count) {
+  return matchScanContextDescriptor(left, right, sector_count).score;
+}
+
+DescriptorMatch matchScanContextDescriptor(const std::vector<int>& left,
+                                           const std::vector<int>& right,
+                                           const int sector_count) {
+  DescriptorMatch result;
   if (left.empty() || right.empty() || left.size() != right.size() ||
       !validDescriptorBins(left) || !validDescriptorBins(right)) {
-    return 0.0;
+    result.reason = "invalid_descriptor";
+    return result;
   }
   if (sector_count > 1 && left.size() % sector_count == 0) {
-    double best = 0.0;
+    double best = -1.0;
+    double second_best = -1.0;
+    int best_shift = 0;
     for (int shift = 0; shift < sector_count; ++shift) {
-      best = std::max(best, descriptorSimilarityNoShift(left, shiftSectors(right, sector_count, shift)));
+      const double score =
+          descriptorSimilarityNoShift(left, shiftSectors(right, sector_count, shift));
+      if (score > best + 1e-12) {
+        second_best = best;
+        best = score;
+        best_shift = shift;
+      } else if (score > second_best) {
+        second_best = score;
+      }
     }
-    return best;
+    result.valid = true;
+    result.score = std::max(0.0, best);
+    result.sector_shift = best_shift;
+    result.second_best_score = std::max(0.0, second_best);
+    result.top_score_ratio = topScoreRatio(result.score, result.second_best_score);
+    result.reason = result.top_score_ratio <= 1.0 + 1e-9 ? "ambiguous_rotation" : "accepted";
+    return result;
   }
-  return descriptorSimilarityNoShift(left, right);
+  result.valid = true;
+  result.score = descriptorSimilarityNoShift(left, right);
+  result.sector_shift = 0;
+  result.second_best_score = 0.0;
+  result.top_score_ratio = topScoreRatio(result.score, result.second_best_score);
+  result.reason = "accepted";
+  return result;
 }
 
 int qualityRank(const std::string& value) {
