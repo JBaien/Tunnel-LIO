@@ -1,0 +1,40 @@
+calibration:
+  version: tunnel_bag_replay_identity_2026_06_04
+  reference_frame: base_link
+  notes:
+    - Replay-only TF profile for Tunnel.bag software validation.
+    - Identity transforms let the pipeline process the bag before measured field extrinsics are available.
+    - Do not use this file as final field calibration evidence.
+
+frames:
+  base_link:
+    role: replay_body_reference
+  velodyne:
+    role: tunnel_bag_center_lidar_frame
+  laser_link:
+    role: tunnel_bag_left_lidar_frame
+  velodyne_right:
+    role: tunnel_bag_right_lidar_frame
+
+transforms:
+  - parent: base_link
+    child: velodyne
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: tunnel_bag_replay_identity
+  - parent: base_link
+    child: laser_link
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: tunnel_bag_replay_identity
+  - parent: base_link
+    child: velodyne_right
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: tunnel_bag_replay_identity
+
+required_frames:
+  - base_link
+  - velodyne
+  - laser_link
+  - velodyne_right

@@ -1,0 +1,4 @@
+overall=PASS;total_records=1;failed_records=0
+---
+session=sample_static;scenario=STATIC_IDLE;status=PASS;failed_checks=0
+recovery_time_s=25

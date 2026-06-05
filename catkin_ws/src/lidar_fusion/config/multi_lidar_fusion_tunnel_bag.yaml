@@ -1,0 +1,32 @@
+multi_lidar_fusion:
+  lidar_num: 3
+
+  lidar_topics:
+    - /velodyne_points
+    - /left/lslidar_point_cloud
+    - /right/velodyne_points
+
+  output_topic: /points_raw
+  diagnostics_topic: /diagnostics/lidar_fusion
+  output_frame_id: base_link
+
+  sync_queue_size: 50
+  sync_slop: 0.16
+
+  tf_timeout: 0.10
+
+  drop_empty_cloud: true
+  min_points_per_lidar: 10
+
+  normalize_point_time: true
+  allow_missing_ring_time: true
+
+  enable_voxel_filter: false
+  voxel_leaf_size: 0.05
+
+  enable_diagnostics: true
+  diagnostics_period: 1.0
+  overlap_pair_distance: 0.10
+  overlap_max_points: 6000
+  overlap_warn_rmse: 0.08
+  overlap_fail_rmse: 0.15

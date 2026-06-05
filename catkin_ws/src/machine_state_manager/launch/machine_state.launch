@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find machine_state_manager)/config/machine_state.yaml" />
+  <arg name="start_plc_modbus" default="false" />
+
+  <node pkg="machine_state_manager"
+        type="machine_state_node"
+        name="machine_state_manager"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+
+  <node pkg="machine_state_manager"
+        type="plc_modbus_node"
+        name="plc_modbus"
+        output="screen"
+        if="$(arg start_plc_modbus)">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

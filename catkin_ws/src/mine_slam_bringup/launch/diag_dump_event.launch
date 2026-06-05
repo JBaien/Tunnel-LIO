@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="service_name" default="/diag/dump_event" />
+
+  <node pkg="mine_slam_bringup"
+        type="diag_dump_event_node"
+        name="diag_dump_event"
+        output="screen">
+    <param name="service_name" value="$(arg service_name)" />
+  </node>
+</launch>

@@ -1,0 +1,8 @@
+# Normalized replay/HIL validation events.
+# Each record is semicolon-separated key=value fields.
+event=session_start;scenario=STATIC_IDLE;session_id=sample_static;t=0.0
+event=static_sample;scenario=STATIC_IDLE;session_id=sample_static;t=5.0;static_drift_m=0.010
+event=chainage_sample;scenario=STATIC_IDLE;session_id=sample_static;t=15.0;chainage_m=50.05;reference_chainage_m=50.00
+event=loop_candidate;scenario=STATIC_IDLE;session_id=sample_static;t=20.0;wrong_loop=0
+event=queue_sample;scenario=STATIC_IDLE;session_id=sample_static;t=25.0;queue_backlog=1
+event=pps_sample;scenario=STATIC_IDLE;session_id=sample_static;t=30.0;pps_jitter_ms=0.5

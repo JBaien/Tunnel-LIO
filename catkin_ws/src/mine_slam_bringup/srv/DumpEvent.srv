@@ -1,0 +1,11 @@
+string session_dir
+string output_root
+string event_id
+float64 event_time_s
+float64 window_before_s
+float64 window_after_s
+string reason
+---
+bool success
+string message
+string event_dir

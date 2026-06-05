@@ -1,0 +1,12 @@
+timestamp=2026-06-03T00:00:00+08:00
+runtime_dir=/tmp/tunnel_lio_runtime/sample_static
+log_dir=/tmp/tunnel_lio_runtime/sample_static/logs
+state_dir=/tmp/tunnel_lio_runtime/sample_static/state
+disk_available_gb=120
+runtime_pid=1234
+systemd_unit=tunnel-lio.service
+systemd_active=active
+systemd_active_source=systemctl
+docker_container=tunnel-lio-runtime
+docker_container_status=running
+docker_container_status_source=docker_inspect

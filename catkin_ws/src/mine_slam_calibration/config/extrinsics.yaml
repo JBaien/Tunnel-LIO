@@ -1,0 +1,55 @@
+calibration:
+  version: p0_placeholder_2026_06_02
+  reference_frame: base_link
+  notes:
+    - Placeholder values are valid for software bringup only.
+    - Replace every source=placeholder transform with measured extrinsics before field mapping.
+
+frames:
+  base_link:
+    role: crawler_body
+  lidar_center:
+    role: center_lidar_reference
+  lidar_left:
+    role: left_lidar
+  lidar_right:
+    role: right_lidar
+  imu_native:
+    role: imu_vendor_native_frame
+  imu_link:
+    role: imu_ros_frame
+
+transforms:
+  - parent: base_link
+    child: lidar_center
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: placeholder
+  - parent: base_link
+    child: lidar_left
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: placeholder
+  - parent: base_link
+    child: lidar_right
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: placeholder
+  - parent: base_link
+    child: imu_native
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 0.0]
+    source: placeholder
+  - parent: imu_native
+    child: imu_link
+    translation: [0.0, 0.0, 0.0]
+    rotation_rpy: [0.0, 0.0, 1.5707963267948966]
+    source: native_y_forward_z_up_to_ros_x_forward_y_left_z_up
+
+required_frames:
+  - base_link
+  - lidar_center
+  - lidar_left
+  - lidar_right
+  - imu_native
+  - imu_link

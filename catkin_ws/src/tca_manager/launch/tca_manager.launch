@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find tca_manager)/config/tca_manager.yaml" />
+
+  <node pkg="tca_manager"
+        type="tca_manager_node"
+        name="tca_manager"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

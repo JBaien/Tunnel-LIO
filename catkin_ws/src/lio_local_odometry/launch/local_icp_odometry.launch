@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find lio_local_odometry)/config/local_icp_odometry.yaml" />
+
+  <node pkg="lio_local_odometry"
+        type="local_icp_odometry_node"
+        name="local_icp_odometry"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

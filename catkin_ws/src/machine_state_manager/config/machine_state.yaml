@@ -1,0 +1,31 @@
+left_track_speed_topic: /plc/left_track_speed
+right_track_speed_topic: /plc/right_track_speed
+cutting_on_topic: /plc/cutting_on
+odom_topic: /lio/odom_local
+relocalizing_topic: /session/relocalizing
+state_topic: /machine/state
+diagnostics_topic: /diagnostics/machine_state
+
+publish_period_sec: 0.1
+static_track_threshold: 0.05
+move_track_threshold: 0.1
+static_lidar_speed_threshold: 0.03
+move_lidar_speed_threshold: 0.08
+turn_track_delta_threshold: 0.12
+imu_static_vibration_threshold: 0.2
+
+plc:
+  ip_address: 192.168.188.20
+  port: 502
+  start_register: 0
+  num_registers: 3
+  poll_rate_hz: 20.0
+  response_timeout_ms: 200
+  reconnect_delay_ms: 1000
+  diagnostics_topic: /diagnostics/plc_modbus
+  left_track_register_index: 0
+  right_track_register_index: 1
+  status_register_index: 2
+  track_speed_scale: 0.001
+  cutting_on_bit: 0
+  valid_bit: 1

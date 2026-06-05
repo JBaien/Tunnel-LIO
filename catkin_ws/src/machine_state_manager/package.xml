@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>machine_state_manager</name>
+  <version>0.1.0</version>
+  <description>Machine operation state classification for Tunnel-LIO map-write gating.</description>
+
+  <maintainer email="bai@example.com">bai</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>libmodbus-dev</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>pkg-config</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roslaunch</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>libmodbus-dev</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>

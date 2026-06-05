@@ -1,0 +1,19 @@
+<launch>
+  <arg name="metrics_file" default="$(find lio_eval_tools)/config/sample_validation_metrics.txt"/>
+  <arg name="event_file" default=""/>
+  <arg name="thresholds" default="$(find lio_eval_tools)/config/validation_thresholds.yaml"/>
+  <arg name="scenario_thresholds_file" default="$(find lio_eval_tools)/config/scenario_validation_thresholds.txt"/>
+  <arg name="evidence_manifest_file" default=""/>
+  <arg name="evidence_base_dir" default="$(find lio_eval_tools)/config"/>
+  <arg name="report_file" default="/tmp/tunnel_lio_validation_report.txt"/>
+
+  <node pkg="lio_eval_tools" type="validation_report_node" name="validation_report_node" output="screen" required="true">
+    <rosparam file="$(arg thresholds)" command="load"/>
+    <param name="metrics_file" value="$(arg metrics_file)"/>
+    <param name="event_file" value="$(arg event_file)"/>
+    <param name="scenario_thresholds_file" value="$(arg scenario_thresholds_file)"/>
+    <param name="evidence_manifest_file" value="$(arg evidence_manifest_file)"/>
+    <param name="evidence_base_dir" value="$(arg evidence_base_dir)"/>
+    <param name="report_file" value="$(arg report_file)"/>
+  </node>
+</launch>

@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+    IMU Modbus Driver - 基础启动文件
+    功能: 仅启动IMU Modbus节点
+-->
+<launch>
+    <arg name="ip_address" default="192.168.188.105" />
+    <arg name="port" default="502" />
+    <arg name="output_topic" default="imu_raw" />
+    <arg name="frame_id" default="imu_link" />
+    <arg name="poll_rate_hz" default="400.0" />
+    <arg name="warn_min_publish_rate_ratio" default="0.8" />
+    <arg name="warn_read_latency_ms" default="50.0" />
+    <arg name="warn_acc_saturation_mps2" default="150.0" />
+    <arg name="warn_gyro_saturation_radps" default="31.41592653589793" />
+    <arg name="orientation_covariance_x" default="0.001" />
+    <arg name="orientation_covariance_y" default="0.001" />
+    <arg name="orientation_covariance_z" default="0.001" />
+    <arg name="angular_velocity_covariance_x" default="1.6819006980034508e-10" />
+    <arg name="angular_velocity_covariance_y" default="3.705588444805265e-11" />
+    <arg name="angular_velocity_covariance_z" default="2.368305999626672e-10" />
+    <arg name="linear_acceleration_covariance_x" default="9.20232563630135e-06" />
+    <arg name="linear_acceleration_covariance_y" default="7.463590641361591e-06" />
+    <arg name="linear_acceleration_covariance_z" default="1.0680098811370393e-05" />
+    <arg name="enable_temperature_diagnostics" default="false" />
+    <arg name="temperature_register" default="-1" />
+    <arg name="temperature_register_type" default="float32" />
+    <arg name="temperature_scale" default="1.0" />
+    <arg name="temperature_offset_c" default="0.0" />
+    <arg name="warn_temperature_abs_c" default="85.0" />
+    <arg name="warn_temperature_delta_c" default="15.0" />
+    <arg name="diagnostics_topic" default="imu_diagnostics" />
+    <arg name="timestamp_source" default="host_now" />
+    <arg name="hardware_time_status" default="host_time_only" />
+    <arg name="pps_status" default="unconfigured" />
+
+    <node name="imu_modbus_node" pkg="imu_modbus_driver" type="imu_modbus_node"
+          output="screen" respawn="true">
+        <param name="ip_address" value="$(arg ip_address)" />
+        <param name="port" value="$(arg port)" />
+        <param name="output_topic" value="$(arg output_topic)" />
+        <param name="frame_id" value="$(arg frame_id)" />
+        <param name="poll_rate_hz" value="$(arg poll_rate_hz)" />
+        <param name="warn_min_publish_rate_ratio" value="$(arg warn_min_publish_rate_ratio)" />
+        <param name="warn_read_latency_ms" value="$(arg warn_read_latency_ms)" />
+        <param name="warn_acc_saturation_mps2" value="$(arg warn_acc_saturation_mps2)" />
+        <param name="warn_gyro_saturation_radps" value="$(arg warn_gyro_saturation_radps)" />
+        <param name="orientation_covariance_x" value="$(arg orientation_covariance_x)" />
+        <param name="orientation_covariance_y" value="$(arg orientation_covariance_y)" />
+        <param name="orientation_covariance_z" value="$(arg orientation_covariance_z)" />
+        <param name="angular_velocity_covariance_x" value="$(arg angular_velocity_covariance_x)" />
+        <param name="angular_velocity_covariance_y" value="$(arg angular_velocity_covariance_y)" />
+        <param name="angular_velocity_covariance_z" value="$(arg angular_velocity_covariance_z)" />
+        <param name="linear_acceleration_covariance_x" value="$(arg linear_acceleration_covariance_x)" />
+        <param name="linear_acceleration_covariance_y" value="$(arg linear_acceleration_covariance_y)" />
+        <param name="linear_acceleration_covariance_z" value="$(arg linear_acceleration_covariance_z)" />
+        <param name="enable_temperature_diagnostics" value="$(arg enable_temperature_diagnostics)" />
+        <param name="temperature_register" value="$(arg temperature_register)" />
+        <param name="temperature_register_type" value="$(arg temperature_register_type)" />
+        <param name="temperature_scale" value="$(arg temperature_scale)" />
+        <param name="temperature_offset_c" value="$(arg temperature_offset_c)" />
+        <param name="warn_temperature_abs_c" value="$(arg warn_temperature_abs_c)" />
+        <param name="warn_temperature_delta_c" value="$(arg warn_temperature_delta_c)" />
+        <param name="diagnostics_topic" value="$(arg diagnostics_topic)" />
+        <param name="timestamp_source" value="$(arg timestamp_source)" />
+        <param name="hardware_time_status" value="$(arg hardware_time_status)" />
+        <param name="pps_status" value="$(arg pps_status)" />
+    </node>
+</launch>

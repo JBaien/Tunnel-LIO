@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find slam_backend_manager)/config/slam_backend.yaml" />
+
+  <node pkg="slam_backend_manager"
+        type="slam_backend_node"
+        name="slam_backend_manager"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

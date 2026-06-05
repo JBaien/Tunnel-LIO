@@ -1,0 +1,7 @@
+# Scenario-specific threshold overrides. Missing fields fall back to validation_thresholds.yaml defaults.
+# Malformed override values fail closed instead of falling back to permissive defaults.
+scenario=LONG_STRAIGHT;max_length_error_percent=0.3
+scenario=WRONG_LOOP_TRAP;max_wrong_loop_count=0;max_length_error_percent=0.5
+scenario=POWER_LOSS_ORIGIN;max_recovery_time_s=45.0
+scenario=POWER_LOSS_MICRO_MOVE;max_recovery_time_s=45.0;max_static_drift_m=0.05
+scenario=STATIC_CUTTING;max_static_drift_m=0.03;max_queue_backlog=10

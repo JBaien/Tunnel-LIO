@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="extrinsics_file" default="$(find mine_slam_calibration)/config/extrinsics.yaml" />
+
+  <node pkg="mine_slam_calibration"
+        type="publish_extrinsics_node"
+        name="publish_extrinsics"
+        output="screen">
+    <param name="extrinsics_file" value="$(arg extrinsics_file)" />
+  </node>
+</launch>

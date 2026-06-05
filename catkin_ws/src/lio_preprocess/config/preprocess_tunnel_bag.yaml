@@ -1,0 +1,28 @@
+input_cloud_topic: /points_raw
+imu_topic: /imu/data
+output_cloud_topic: /lio/points_deskewed
+diagnostics_topic: /diagnostics/lio_preprocess
+output_frame_id: base_link
+
+min_range: 0.4
+max_range: 120.0
+
+enable_body_crop: true
+body_crop:
+  x_min: -1.8
+  x_max: 1.8
+  y_min: -1.2
+  y_max: 1.2
+  z_min: -0.8
+  z_max: 1.4
+
+require_recent_imu: false
+max_imu_age_sec: 0.2
+imu_buffer_size: 400
+
+enable_imu_deskew: true
+deskew_reference: start
+point_time_fields: [time, timestamp, t, offset_time]
+point_time_scale: 1.0
+max_abs_point_time: 0.2
+diagnostics_period_sec: 1.0

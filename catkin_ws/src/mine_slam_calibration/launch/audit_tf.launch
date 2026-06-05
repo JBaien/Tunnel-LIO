@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="service_name" default="/calib/audit_tf" />
+  <arg name="extrinsics_file" default="$(find mine_slam_calibration)/config/extrinsics.yaml" />
+
+  <node pkg="mine_slam_calibration"
+        type="audit_tf_node"
+        name="audit_tf"
+        output="screen">
+    <param name="service_name" value="$(arg service_name)" />
+    <param name="default_extrinsics_file" value="$(arg extrinsics_file)" />
+  </node>
+</launch>

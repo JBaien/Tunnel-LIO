@@ -1,0 +1,28 @@
+submap_topic: /map/local_submap
+mapping_control_topic: /mapping/control
+section_structural_topic: /section/structural
+machine_state_topic: /machine/state
+loop_candidate_topic: /backend/loop_candidate
+loop_verified_topic: /backend/loop_verified
+stable_promotion_topic: /backend/stable_promotion
+diagnostics_topic: /diagnostics/slam_backend
+stable_map_ledger_path: /tmp/tunnel_lio_stable_map/stable_map.json
+
+ring_edges: [0.0, 5.0, 10.0, 20.0, 40.0]
+sector_count: 12
+max_descriptor_bin_count: 0
+intensity_quantization: 1.0
+min_intensity_bin_points: 1
+keyframe_spacing_m: 5.0
+min_loop_score: 0.5
+min_top_score_ratio: 1.5
+min_loop_chainage_separation_m: 10.0
+intensity_descriptor_weight: 0.0
+min_geometric_score: 0.75
+max_centroid_distance_m: 0.5
+max_icp_rmse_m: 0.15
+min_icp_inlier_ratio: 0.8
+icp_inlier_threshold_m: 0.25
+icp_iterations: 20
+max_icp_points: 300
+min_stable_quality: B

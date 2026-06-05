@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="use_sim_time" default="true" />
+  <arg name="section_session_id" default="tunnel_bag_replay" />
+  <arg name="session_root" default="/tmp/tunnel_lio_replay_sessions/tunnel_bag_replay" />
+  <arg name="start_preprocess" default="true" />
+  <arg name="start_local_odometry" default="true" />
+  <arg name="start_state_estimator" default="true" />
+  <arg name="start_machine_state" default="true" />
+  <arg name="start_mapping_control" default="true" />
+  <arg name="start_section_manager" default="true" />
+  <arg name="start_tca_manager" default="true" />
+  <arg name="start_slam_backend" default="true" />
+  <arg name="start_session_manager" default="true" />
+  <arg name="start_time_manager" default="true" />
+  <arg name="local_odometry_config" default="$(find lio_local_odometry)/config/local_icp_odometry_tunnel_bag.yaml" />
+
+  <param name="/use_sim_time" value="$(arg use_sim_time)" />
+
+  <include file="$(find mine_slam_calibration)/launch/publish_extrinsics.launch">
+    <arg name="extrinsics_file"
+         value="$(find mine_slam_calibration)/config/extrinsics_tunnel_bag_identity.yaml" />
+  </include>
+
+  <include file="$(find lidar_fusion)/launch/multi_lidar_fusion.launch">
+    <arg name="config"
+         value="$(find lidar_fusion)/config/multi_lidar_fusion_tunnel_bag.yaml" />
+    <arg name="publish_static_tf" value="false" />
+  </include>
+
+  <group if="$(arg start_preprocess)">
+    <include file="$(find lio_preprocess)/launch/preprocess.launch">
+      <arg name="config"
+           value="$(find lio_preprocess)/config/preprocess_tunnel_bag.yaml" />
+    </include>
+  </group>
+
+  <group if="$(arg start_local_odometry)">
+    <include file="$(find lio_local_odometry)/launch/local_icp_odometry.launch">
+      <arg name="config" value="$(arg local_odometry_config)" />
+    </include>
+  </group>
+
+  <group if="$(arg start_state_estimator)">
+    <include file="$(find lio_state_estimator)/launch/state_estimator.launch">
+      <arg name="config"
+           value="$(find lio_state_estimator)/config/state_estimator_tunnel_bag.yaml" />
+    </include>
+  </group>
+
+  <group if="$(arg start_machine_state)">
+    <include file="$(find machine_state_manager)/launch/machine_state.launch">
+      <arg name="start_plc_modbus" value="false" />
+    </include>
+  </group>
+
+  <group if="$(arg start_mapping_control)">
+    <include file="$(find mapping_control)/launch/mapping_control.launch" />
+  </group>
+
+  <group if="$(arg start_section_manager)">
+    <include file="$(find section_manager)/launch/section_manager.launch">
+      <arg name="session_id" value="$(arg section_session_id)" />
+    </include>
+  </group>
+
+  <group if="$(arg start_tca_manager)">
+    <include file="$(find tca_manager)/launch/tca_manager.launch" />
+  </group>
+
+  <group if="$(arg start_slam_backend)">
+    <include file="$(find slam_backend_manager)/launch/slam_backend.launch" />
+  </group>
+
+  <group if="$(arg start_session_manager)">
+    <include file="$(find lio_session_manager)/launch/session_manager.launch">
+      <arg name="session_root" value="$(arg session_root)" />
+    </include>
+  </group>
+
+  <group if="$(arg start_time_manager)">
+    <include file="$(find lio_time_manager)/launch/time_status.launch">
+      <arg name="imu_topic" value="/imu/data" />
+      <arg name="enable_pps" value="false" />
+    </include>
+  </group>
+</launch>

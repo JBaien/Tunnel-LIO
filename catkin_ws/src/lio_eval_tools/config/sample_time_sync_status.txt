@@ -1,0 +1,10 @@
+timestamp=2026-06-03T00:00:00+08:00
+time_sync_status=PASS
+time_status_topic=/time/status
+pps_topic=/time/pps_event
+capture_status=CAPTURED
+pps_status=PASS
+clock_offset_status=PASS
+pps_jitter_ms=0.5
+mean_offset_ms=1.2
+raw=sample_time_status_raw.yaml

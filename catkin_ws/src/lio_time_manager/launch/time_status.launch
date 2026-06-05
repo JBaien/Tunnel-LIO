@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="output_topic" default="/time/status" />
+  <arg name="imu_topic" default="/sensors/imu/raw" />
+  <arg name="imu_diagnostics_topic" default="/diagnostics/imu_modbus" />
+  <arg name="plc_diagnostics_topic" default="/diagnostics/plc_modbus" />
+  <arg name="pps_topic" default="/time/pps_event" />
+  <arg name="enable_pps" default="true" />
+  <arg name="publish_period_sec" default="1.0" />
+  <arg name="stale_after_sec" default="1.0" />
+  <arg name="clock_offset_window_size" default="100" />
+
+  <node pkg="lio_time_manager" type="time_status_node" name="time_status_node" output="screen">
+    <param name="output_topic" value="$(arg output_topic)" />
+    <param name="imu_topic" value="$(arg imu_topic)" />
+    <param name="imu_diagnostics_topic" value="$(arg imu_diagnostics_topic)" />
+    <param name="plc_diagnostics_topic" value="$(arg plc_diagnostics_topic)" />
+    <param name="pps_topic" value="$(arg pps_topic)" />
+    <param name="enable_pps" value="$(arg enable_pps)" />
+    <param name="publish_period_sec" value="$(arg publish_period_sec)" />
+    <param name="stale_after_sec" value="$(arg stale_after_sec)" />
+    <param name="clock_offset_window_size" value="$(arg clock_offset_window_size)" />
+    <rosparam param="cloud_topics">[/points_raw]</rosparam>
+  </node>
+</launch>

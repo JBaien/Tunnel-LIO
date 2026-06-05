@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="lidar_driver_family" default="timoo" />
+  <arg name="start_lidars" default="true" />
+  <arg name="start_imu" default="true" />
+
+  <arg name="imu_ip_address" default="192.168.188.105" />
+  <arg name="imu_port" default="502" />
+  <arg name="imu_frame_id" default="imu_link" />
+  <arg name="imu_output_topic" default="/sensors/imu/raw" />
+  <arg name="imu_diagnostics_topic" default="/diagnostics/imu_modbus" />
+  <arg name="imu_warn_min_publish_rate_ratio" default="0.8" />
+  <arg name="imu_warn_read_latency_ms" default="50.0" />
+  <arg name="imu_warn_acc_saturation_mps2" default="150.0" />
+  <arg name="imu_warn_gyro_saturation_radps" default="31.41592653589793" />
+  <arg name="imu_orientation_covariance_x" default="0.001" />
+  <arg name="imu_orientation_covariance_y" default="0.001" />
+  <arg name="imu_orientation_covariance_z" default="0.001" />
+  <arg name="imu_angular_velocity_covariance_x" default="1.6819006980034508e-10" />
+  <arg name="imu_angular_velocity_covariance_y" default="3.705588444805265e-11" />
+  <arg name="imu_angular_velocity_covariance_z" default="2.368305999626672e-10" />
+  <arg name="imu_linear_acceleration_covariance_x" default="9.20232563630135e-06" />
+  <arg name="imu_linear_acceleration_covariance_y" default="7.463590641361591e-06" />
+  <arg name="imu_linear_acceleration_covariance_z" default="1.0680098811370393e-05" />
+  <arg name="imu_enable_temperature_diagnostics" default="false" />
+  <arg name="imu_temperature_register" default="-1" />
+  <arg name="imu_temperature_register_type" default="float32" />
+  <arg name="imu_temperature_scale" default="1.0" />
+  <arg name="imu_temperature_offset_c" default="0.0" />
+  <arg name="imu_warn_temperature_abs_c" default="85.0" />
+  <arg name="imu_warn_temperature_delta_c" default="15.0" />
+
+  <group if="$(arg start_imu)">
+    <include file="$(find imu_modbus_driver)/launch/imu_modbus.launch">
+      <arg name="ip_address" value="$(arg imu_ip_address)" />
+      <arg name="port" value="$(arg imu_port)" />
+      <arg name="frame_id" value="$(arg imu_frame_id)" />
+      <arg name="output_topic" value="$(arg imu_output_topic)" />
+      <arg name="diagnostics_topic" value="$(arg imu_diagnostics_topic)" />
+      <arg name="warn_min_publish_rate_ratio" value="$(arg imu_warn_min_publish_rate_ratio)" />
+      <arg name="warn_read_latency_ms" value="$(arg imu_warn_read_latency_ms)" />
+      <arg name="warn_acc_saturation_mps2" value="$(arg imu_warn_acc_saturation_mps2)" />
+      <arg name="warn_gyro_saturation_radps" value="$(arg imu_warn_gyro_saturation_radps)" />
+      <arg name="orientation_covariance_x" value="$(arg imu_orientation_covariance_x)" />
+      <arg name="orientation_covariance_y" value="$(arg imu_orientation_covariance_y)" />
+      <arg name="orientation_covariance_z" value="$(arg imu_orientation_covariance_z)" />
+      <arg name="angular_velocity_covariance_x" value="$(arg imu_angular_velocity_covariance_x)" />
+      <arg name="angular_velocity_covariance_y" value="$(arg imu_angular_velocity_covariance_y)" />
+      <arg name="angular_velocity_covariance_z" value="$(arg imu_angular_velocity_covariance_z)" />
+      <arg name="linear_acceleration_covariance_x" value="$(arg imu_linear_acceleration_covariance_x)" />
+      <arg name="linear_acceleration_covariance_y" value="$(arg imu_linear_acceleration_covariance_y)" />
+      <arg name="linear_acceleration_covariance_z" value="$(arg imu_linear_acceleration_covariance_z)" />
+      <arg name="enable_temperature_diagnostics" value="$(arg imu_enable_temperature_diagnostics)" />
+      <arg name="temperature_register" value="$(arg imu_temperature_register)" />
+      <arg name="temperature_register_type" value="$(arg imu_temperature_register_type)" />
+      <arg name="temperature_scale" value="$(arg imu_temperature_scale)" />
+      <arg name="temperature_offset_c" value="$(arg imu_temperature_offset_c)" />
+      <arg name="warn_temperature_abs_c" value="$(arg imu_warn_temperature_abs_c)" />
+      <arg name="warn_temperature_delta_c" value="$(arg imu_warn_temperature_delta_c)" />
+    </include>
+  </group>
+
+  <group if="$(arg start_lidars)">
+    <group if="$(eval arg('lidar_driver_family') == 'timoo')">
+      <include file="$(find timoo_pointcloud)/launch/TM16_Multi3.launch" />
+    </group>
+
+    <group if="$(eval arg('lidar_driver_family') == 'tmlidar')">
+      <group ns="lidar1">
+        <include file="$(find lidar_pointcloud)/launch/scan.launch">
+          <arg name="frame_id" value="lidar_center" />
+          <arg name="port" value="2368" />
+        </include>
+      </group>
+      <group ns="lidar2">
+        <include file="$(find lidar_pointcloud)/launch/scan.launch">
+          <arg name="frame_id" value="lidar_left" />
+          <arg name="port" value="3368" />
+        </include>
+      </group>
+      <group ns="lidar3">
+        <include file="$(find lidar_pointcloud)/launch/scan.launch">
+          <arg name="frame_id" value="lidar_right" />
+          <arg name="port" value="4368" />
+        </include>
+      </group>
+    </group>
+  </group>
+</launch>

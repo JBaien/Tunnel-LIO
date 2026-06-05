@@ -1,0 +1,12 @@
+input_cloud_topic: /lio/points_deskewed
+detection_topic: /tca/detection
+match_topic: /tca/match
+diagnostics_topic: /diagnostics/tca_manager
+ledger_path: /tmp/tunnel_lio_tca/anchors.json
+
+intensity_threshold: 200.0
+min_reflective_points: 5
+cluster_radius_m: 0.35
+context_ring_edges: [0.0, 3.0, 5.0, 8.0]
+min_match_score: 0.5
+min_top_score_ratio: 1.5

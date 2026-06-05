@@ -1,0 +1,15 @@
+submap_topic: /map/local_submap
+mapping_control_topic: /mapping/control
+observed_section_topic: /section/observed
+structural_section_topic: /section/structural
+diagnostics_topic: /diagnostics/section_manager
+export_service: /section/export
+session_id: unassigned
+
+slice_thickness_m: 0.2
+section_spacing_m: 1.0
+max_export_history: 1000
+angle_bins: 36
+min_points: 30
+rectangle_width_m: 4.0
+rectangle_height_m: 2.0

@@ -1,0 +1,2 @@
+sample,timestamp,disk_guard_status,watchdog_status,health_report
+1,2026-06-03T00:00:00+08:00,PASS,PASS,sample_runtime_health.txt

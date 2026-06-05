@@ -1,0 +1,11 @@
+status:
+  - level: 0
+    name: "lio_time_manager pps: /time/pps_event"
+    values:
+      - key: "interval_jitter_ms"
+        value: "0.5"
+  - level: 0
+    name: "lio_time_manager clock: /time/pps_event"
+    values:
+      - key: "mean_offset_ms"
+        value: "1.2"

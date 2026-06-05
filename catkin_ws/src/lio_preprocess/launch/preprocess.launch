@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find lio_preprocess)/config/preprocess.yaml" />
+
+  <node pkg="lio_preprocess"
+        type="preprocess_node"
+        name="lio_preprocess"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

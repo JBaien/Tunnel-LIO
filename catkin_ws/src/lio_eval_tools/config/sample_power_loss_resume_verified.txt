@@ -1,0 +1,8 @@
+timestamp=2026-06-03T00:00:00+08:00
+power_loss_resume_status=PASS
+power_loss_resume_confirmation_overall=missing
+power_loss_resume_confirmation_keys_status=missing
+power_loss_resume_source=metrics_report
+recovery_time_s=25
+max_recovery_time_s=45
+metrics_report=sample_report_pass.txt

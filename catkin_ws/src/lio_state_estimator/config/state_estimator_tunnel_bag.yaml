@@ -1,0 +1,12 @@
+imu_topic: /imu/data
+state_topic: /lio/state_predict
+diagnostics_topic: /diagnostics/lio_state_estimator
+frame_id: odom
+child_frame_id: base_link
+
+window_sec: 5.0
+min_frequency_hz: 100.0
+publish_period_sec: 0.02
+diagnostics_period_sec: 1.0
+gravity_mps2: 9.80665
+max_imu_dt_sec: 0.2

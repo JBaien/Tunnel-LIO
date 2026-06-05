@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>lio_state_estimator</name>
+  <version>0.1.0</version>
+  <description>IMU window, health diagnostics, and state-prediction interface for Tunnel-LIO.</description>
+
+  <maintainer email="bai@example.com">bai</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>diagnostic_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roslaunch</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+</package>

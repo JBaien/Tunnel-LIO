@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find mapping_control)/config/mapping_control.yaml" />
+
+  <node pkg="mapping_control"
+        type="mapping_control_node"
+        name="mapping_control"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>

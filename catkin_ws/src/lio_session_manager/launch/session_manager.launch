@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find lio_session_manager)/config/session_manager.yaml" />
+  <arg name="session_root" default="/tmp/tunnel_lio_sessions" />
+
+  <node pkg="lio_session_manager"
+        type="session_manager_node"
+        name="lio_session_manager"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+    <param name="session_root" value="$(arg session_root)" />
+  </node>
+</launch>

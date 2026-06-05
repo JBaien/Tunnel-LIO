@@ -1,0 +1,10 @@
+timestamp=2026-06-03T00:00:01+08:00
+overall=PASS
+runtime_dir=/tmp/tunnel_lio_runtime/sample_static
+samples=1
+interval_s=86400
+disk_failures=0
+watchdog_failures=0
+watchdog_skipped=0
+health_failures=0
+csv=/tmp/tunnel_lio_runtime/sample_static/logs/runtime_stability.csv

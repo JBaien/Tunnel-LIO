@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find section_manager)/config/section_manager.yaml" />
+  <arg name="session_id" default="unassigned" />
+
+  <node pkg="section_manager"
+        type="section_manager_node"
+        name="section_manager"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+    <param name="session_id" value="$(arg session_id)" />
+  </node>
+</launch>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="session_root" default="/tmp/tunnel_lio_sessions" />
+  <arg name="session_name" default="" />
+  <arg name="bag_prefix" default="tunnel_lio" />
+  <arg name="scenario" default="UNSPECIFIED" />
+  <arg name="pcap_interface" default="any" />
+  <arg name="start_pcap" default="false" />
+  <arg name="runtime_dir" default="" />
+  <arg name="runtime_stability_samples" default="1440" />
+  <arg name="runtime_stability_interval" default="60" />
+  <arg name="time_status_topic" default="/time/status" />
+  <arg name="pps_topic" default="/time/pps_event" />
+  <arg name="topics"
+       default="/points_raw /lio/points_deskewed /lio/odom_local /map/local_submap /sensors/imu/raw /lio/state_predict /machine/state /mapping/control /session/status /time/status /diagnostics/imu_modbus /diagnostics/plc_modbus /diagnostics/lio_time_manager /diagnostics/lio_preprocess /diagnostics/lio_local_odometry /diagnostics/lio_state_estimator /diagnostics/machine_state /tf /tf_static /rosout" />
+
+  <node pkg="mine_slam_bringup"
+        type="record_session.sh"
+        name="record_session"
+        output="screen"
+        required="true"
+        args="--root $(arg session_root) --name '$(arg session_name)' --prefix $(arg bag_prefix) --scenario $(arg scenario) --topics '$(arg topics)' --pcap-interface $(arg pcap_interface) --start-pcap $(arg start_pcap) --runtime-dir '$(arg runtime_dir)' --runtime-stability-samples $(arg runtime_stability_samples) --runtime-stability-interval $(arg runtime_stability_interval) --time-status-topic $(arg time_status_topic) --pps-topic $(arg pps_topic)" />
+</launch>

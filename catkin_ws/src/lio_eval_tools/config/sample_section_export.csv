@@ -1,0 +1,2 @@
+session_id,chainage_m,state_source,quality,completeness,rmse_mm,points
+sample_static,10.000,IDLE_STATIC,A,0.940,16.500,320

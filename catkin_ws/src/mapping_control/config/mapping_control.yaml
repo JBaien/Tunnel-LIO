@@ -1,0 +1,11 @@
+machine_state_topic: /machine/state
+odom_topic: /lio/odom_local
+control_topic: /mapping/control
+diagnostics_topic: /diagnostics/mapping_control
+
+publish_period_sec: 0.1
+section_spacing_m: 1.0
+control_anchor_spacing_m: 50.0
+weak_observability_threshold: 0.3
+max_weak_delta_m: 0.05
+max_nominal_delta_m: 0.5

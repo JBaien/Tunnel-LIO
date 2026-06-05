@@ -1,0 +1,6 @@
+max_static_drift_m: 0.05
+max_length_error_percent: 0.5
+max_recovery_time_s: 45.0
+max_wrong_loop_count: 0
+max_queue_backlog: 10
+max_pps_jitter_ms: 2.0

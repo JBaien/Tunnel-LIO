@@ -1,0 +1,8 @@
+float64 min_chainage_m
+float64 max_chainage_m
+string min_quality
+string output_path
+---
+bool success
+string message
+uint32 exported_count

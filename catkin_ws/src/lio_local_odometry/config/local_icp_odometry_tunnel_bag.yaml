@@ -1,0 +1,37 @@
+input_cloud_topic: /lio/points_deskewed
+odom_topic: /lio/odom_local
+submap_topic: /map/local_submap
+diagnostics_topic: /diagnostics/lio_local_odometry
+
+odom_frame_id: odom
+base_frame_id: base_link
+
+min_points: 100
+max_fitness_score: 0.5
+min_geometry_eigen_ratio: 0.01
+min_geometry_score: 0.2
+voxel_leaf_size: 0.10
+registration_method: icp
+registration_voxel_leaf_sizes: [0.30, 0.15, 0.0]
+gicp_voxel_leaf_sizes: [0.30, 0.15, 0.0]
+ndt_resolutions: [1.0, 0.5, 0.25]
+ndt_step_size: 0.1
+ndt_refinement_iterations: 30
+max_correspondence_distance: 1.0
+transformation_epsilon: 0.0001
+euclidean_fitness_epsilon: 0.001
+max_iterations: 50
+enable_constant_velocity_initial_guess: true
+max_initial_guess_translation: 6.0
+max_initial_guess_scale: 8.0
+cloud_queue_size: 50
+reseed_keyframe_after_consecutive_rejections: 2
+publish_odometry_on_keyframe_reseed: true
+
+publish_submap: true
+submap_voxel_leaf_size: 0.20
+max_submap_points: 200000
+min_stable_submap_points: 1000
+min_submap_observability: 0.5
+max_consecutive_registration_rejections: 2
+diagnostics_period_sec: 1.0

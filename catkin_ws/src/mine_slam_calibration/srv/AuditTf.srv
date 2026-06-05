@@ -1,0 +1,6 @@
+string extrinsics_file
+---
+bool ok
+string message
+uint32 issue_count
+string report

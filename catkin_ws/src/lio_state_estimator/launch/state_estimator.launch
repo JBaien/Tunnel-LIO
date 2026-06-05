@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="config" default="$(find lio_state_estimator)/config/state_estimator.yaml" />
+
+  <node pkg="lio_state_estimator"
+        type="state_estimator_node"
+        name="lio_state_estimator"
+        output="screen">
+    <rosparam file="$(arg config)" command="load" />
+  </node>
+</launch>
